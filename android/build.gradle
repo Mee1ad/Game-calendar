@@ -5,6 +5,19 @@ allprojects {
     }
 }
 
+// Some 3rd-party Flutter plugins (Gradle subprojects) expect a `flutter.*` object
+// to exist during evaluation (e.g. `compileSdk = flutter.compileSdkVersion`).
+// Ensure those projects have sane defaults even when the Flutter extension isn't present.
+gradle.beforeProject { Project p ->
+    if (p.path != ":app" && !p.hasProperty("flutter")) {
+        p.ext.flutter = [
+                compileSdkVersion: 34,
+                minSdkVersion    : 21,
+                targetSdkVersion : 34,
+        ]
+    }
+}
+
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
