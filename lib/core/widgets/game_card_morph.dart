@@ -1,8 +1,6 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
-/// Wraps content in RepaintBoundary + OpenContainer for 120Hz Morph.
-/// Strategy: Isolate repaints, use transform-based animation, avoid layout thrash.
 class GameCardMorph<T> extends StatelessWidget {
   const GameCardMorph({
     super.key,
@@ -25,6 +23,11 @@ class GameCardMorph<T> extends StatelessWidget {
         transitionDuration: const Duration(milliseconds: 300),
         closedElevation: 0,
         openElevation: 0,
+        closedColor: Colors.transparent,
+        openColor: Theme.of(context).colorScheme.surface,
+        closedShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
       ),
     );
   }

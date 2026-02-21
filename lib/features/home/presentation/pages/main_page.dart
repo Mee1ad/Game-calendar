@@ -42,7 +42,7 @@ class MainPage extends StatelessWidget {
           ],
           bottom: const TabBar(
             tabs: [
-              Tab(icon: Icon(Icons.games), text: 'Coming Soon'),
+              Tab(icon: Icon(Icons.sports_esports), text: 'Coming Soon'),
               Tab(icon: Icon(Icons.favorite), text: 'Favorites'),
             ],
           ),
@@ -69,7 +69,9 @@ class _GamesTab extends StatelessWidget {
           GameSuccess(
             :final filteredGames,
             :final favoriteIds,
-            :final isRefreshing
+            :final isRefreshing,
+            :final isSearching,
+            :final searchQuery,
           ) =>
             RefreshIndicator(
               onRefresh: () async {
@@ -80,6 +82,8 @@ class _GamesTab extends StatelessWidget {
                   GameListView(
                     games: filteredGames,
                     favoriteIds: favoriteIds,
+                    searchQuery: searchQuery,
+                    isSearching: isSearching,
                   ),
                   if (isRefreshing)
                     const Positioned(

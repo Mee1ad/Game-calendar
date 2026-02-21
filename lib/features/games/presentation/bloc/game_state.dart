@@ -30,6 +30,8 @@ final class GameSuccess extends GameState {
     required this.filters,
     required this.favoriteIds,
     this.isRefreshing = false,
+    this.isSearching = false,
+    this.searchQuery = '',
   });
 
   final List<Game> games;
@@ -37,6 +39,8 @@ final class GameSuccess extends GameState {
   final GameFilters filters;
   final Set<int> favoriteIds;
   final bool isRefreshing;
+  final bool isSearching;
+  final String searchQuery;
 
   GameSuccess copyWith({
     List<Game>? games,
@@ -44,6 +48,8 @@ final class GameSuccess extends GameState {
     GameFilters? filters,
     Set<int>? favoriteIds,
     bool? isRefreshing,
+    bool? isSearching,
+    String? searchQuery,
   }) =>
       GameSuccess(
         games: games ?? this.games,
@@ -51,9 +57,18 @@ final class GameSuccess extends GameState {
         filters: filters ?? this.filters,
         favoriteIds: favoriteIds ?? this.favoriteIds,
         isRefreshing: isRefreshing ?? this.isRefreshing,
+        isSearching: isSearching ?? this.isSearching,
+        searchQuery: searchQuery ?? this.searchQuery,
       );
 
   @override
-  List<Object?> get props =>
-      [games, filteredGames, filters, favoriteIds, isRefreshing];
+  List<Object?> get props => [
+        games,
+        filteredGames,
+        filters,
+        favoriteIds,
+        isRefreshing,
+        isSearching,
+        searchQuery,
+      ];
 }

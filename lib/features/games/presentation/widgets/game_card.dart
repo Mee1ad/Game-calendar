@@ -1,9 +1,13 @@
+import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:game_calendar/core/widgets/game_card_morph.dart';
 import 'package:game_calendar/features/games/domain/models/game.dart';
-import 'package:game_calendar/features/games/presentation/bloc/game_bloc.dart';
 import 'package:game_calendar/features/games/presentation/pages/game_detail_page.dart';
+
+const _neonPurple = Color(0xFFBB86FC);
 
 class GameCard extends StatelessWidget {
   const GameCard({
@@ -19,96 +23,127 @@ class GameCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return RepaintBoundary(
       child: GameCardMorph<void>(
-        closedBuilder: (context, openContainer) => Card(
-          clipBehavior: Clip.antiAlias,
-          color: theme.colorScheme.surfaceContainerHighest,
-          child: InkWell(
-            onTap: openContainer,
-            child: Stack(
+        closedBuilder: (ctx, open) => GestureDetector(
+          onTap: open,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              color: Colors.white.withOpacity(0.05),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [_cover(), _glassInfo(), _favButton()],
+              ),
+            ),
+          ),
+        ),
+        openBuilder: (ctx, _) =>
+            GameDetailPage(game: game, onFavoriteTap: onFavoriteTap),
+      ),
+    );
+  }
+
+  Widget _cover() {
+    if (game.coverUrl == null) return _placeholder();
+    return CachedNetworkImage(
+      imageUrl: game.coverUrl!,
+      fit: BoxFit.cover,
+      placeholder: (_, __) => Shimmer.fromColors(
+        baseColor: Colors.grey.shade900,
+        highlightColor: Colors.grey.shade800,
+        child: Container(color: Colors.grey.shade900),
+      ),
+      errorWidget: (_, __, ___) => _placeholder(),
+    );
+  }
+
+  Widget _glassInfo() {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.15),
+                  Colors.black.withOpacity(0.75),
+                ],
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    AspectRatio(
-                      aspectRatio: 3 / 4,
-                      child: game.coverUrl != null
-                          ? Image.network(
-                              game.coverUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _placeholder(theme),
-                            )
-                          : _placeholder(theme),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            game.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (game.releaseDate != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              _formatDate(game.releaseDate!),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: IconButton(
-                    icon: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: isFavorite ? Colors.red : theme.colorScheme.onSurface,
-                    ),
-                    onPressed: onFavoriteTap,
-                    style: IconButton.styleFrom(
-                      backgroundColor: theme.colorScheme.surface.withOpacity(0.8),
-                    ),
+                Text(
+                  game.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.rajdhani(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.2,
                   ),
                 ),
+                if (game.releaseDate != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatDate(game.releaseDate!),
+                    style: GoogleFonts.rajdhani(
+                      fontSize: 13,
+                      color: Colors.white60,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
         ),
-        openBuilder: (context, _) => GameDetailPage(
-          game: game,
-          onFavoriteTap: onFavoriteTap,
+      ),
+    );
+  }
+
+  Widget _favButton() {
+    return Positioned(
+      top: 8,
+      right: 8,
+      child: GestureDetector(
+        onTap: onFavoriteTap,
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.black38,
+          ),
+          child: Icon(
+            isFavorite ? Icons.favorite : Icons.favorite_border,
+            size: 20,
+            color: isFavorite ? _neonPurple : Colors.white70,
+            shadows: isFavorite
+                ? [const Shadow(color: _neonPurple, blurRadius: 12)]
+                : null,
+          ),
         ),
       ),
     );
   }
 
-  Widget _placeholder(ThemeData theme) {
-    return Container(
-      color: theme.colorScheme.surfaceContainerHigh,
-      child: Center(
-        child: Icon(
-          Icons.sports_esports_outlined,
-          size: 48,
-          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+  Widget _placeholder() => Container(
+        color: const Color(0xFF1A1A2E),
+        child: const Center(
+          child:
+              Icon(Icons.sports_esports, size: 48, color: Colors.white24),
         ),
-      ),
-    );
-  }
+      );
 
-  String _formatDate(DateTime d) {
-    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-  }
+  String _formatDate(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }

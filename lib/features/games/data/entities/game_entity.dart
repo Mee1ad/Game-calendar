@@ -42,11 +42,13 @@ class GameEntity {
     String? coverUrl;
     final cover = json['cover'];
     if (cover is Map && cover['url'] != null) {
-      final url = cover['url'].toString();
-      coverUrl = url.startsWith('http')
-          ? url
-          : 'https://images.igdb.com/igdb/image/upload/$url';
-      coverUrl = coverUrl.replaceAll('t_thumb', 't_cover_big');
+      var url = cover['url'].toString();
+      if (url.startsWith('//')) {
+        url = 'https:$url';
+      } else if (!url.startsWith('http')) {
+        url = 'https://images.igdb.com/igdb/image/upload/$url';
+      }
+      coverUrl = url.replaceAll('t_thumb', 't_cover_big');
     }
 
     DateTime? releaseDate;
@@ -63,10 +65,12 @@ class GameEntity {
               final u = e['url'];
               if (u == null) return null;
               var s = u.toString();
-              s = s.startsWith('http')
-                  ? s
-                  : 'https://images.igdb.com/igdb/image/upload/$s';
-              return s.replaceAll('t_thumb', 't_cover_big');
+              if (s.startsWith('//')) {
+                s = 'https:$s';
+              } else if (!s.startsWith('http')) {
+                s = 'https://images.igdb.com/igdb/image/upload/$s';
+              }
+              return s.replaceAll('t_thumb', 't_screenshot_big');
             })
             .whereType<String>()
             .toList()
