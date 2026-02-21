@@ -1,6 +1,5 @@
 import 'package:animations/animations.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 /// Wraps content in RepaintBoundary + OpenContainer for 120Hz Morph.
 /// Strategy: Isolate repaints, use transform-based animation, avoid layout thrash.
@@ -12,8 +11,8 @@ class GameCardMorph<T> extends StatelessWidget {
     this.transitionType = OpenContainerTransitionType.fade,
   });
 
-  final ClosedBuilder closedBuilder;
-  final OpenContainerBuilder openBuilder;
+  final CloseContainerBuilder closedBuilder;
+  final OpenContainerBuilder<T> openBuilder;
   final OpenContainerTransitionType transitionType;
 
   @override
