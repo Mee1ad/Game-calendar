@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:game_calendar/core/theme/app_theme.dart';
-import 'package:game_calendar/features/home/presentation/pages/home_page.dart';
+import 'package:game_calendar/features/home/presentation/pages/main_page.dart';
 
 class GameCalendarApp extends StatelessWidget {
   const GameCalendarApp({super.key});
@@ -12,7 +12,7 @@ class GameCalendarApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.dark,
-      home: const HomePage(),
+      home: const MainPage(),
     );
   }
 }

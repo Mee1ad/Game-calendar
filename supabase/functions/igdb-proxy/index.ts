@@ -11,9 +11,9 @@ interface Env {
 function upgradeImageUrl(url: string): string {
   if (!url || typeof url !== "string") return url;
   return url
-    .replace(/t_thumb/g, "t_720p")
+    .replace(/t_thumb/g, "t_cover_big")
     .replace(/t_cover_small/g, "t_cover_big")
-    .replace(/t_screenshot_med/g, "t_720p");
+    .replace(/t_screenshot_med/g, "t_cover_big");
 }
 
 function upgradeImageUrls<T>(obj: T): T {
