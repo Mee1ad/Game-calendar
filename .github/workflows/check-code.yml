@@ -2,7 +2,7 @@ name: Check Code
 
 on:
   push:
-    branches: ['**']
+  workflow_dispatch:
 
 jobs:
   analyze-and-test:
