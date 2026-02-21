@@ -27,6 +27,14 @@ jobs:
           echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
           echo "storeFile=app/keystore.jks" >> android/key.properties
 
+      - name: Ensure local.properties
+        run: |
+          FLUTTER_SDK=$(cd $(dirname $(dirname $(which flutter))) && pwd)
+          echo "flutter.sdk=$FLUTTER_SDK" > android/local.properties
+          if [ -n "$ANDROID_HOME" ]; then
+            echo "sdk.dir=$ANDROID_HOME" >> android/local.properties
+          fi
+
       - name: Build APK
         env:
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
