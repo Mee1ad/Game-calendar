@@ -1,3 +1,7 @@
+def flutterCompileSdkVersion = 34
+def flutterMinSdkVersion = 21
+def flutterTargetSdkVersion = 34
+
 plugins {
     id "com.android.application"
     id "org.jetbrains.kotlin.android"
@@ -34,7 +38,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.gamecalendar.game_calendar"
-    compileSdk 34
+    compileSdkVersion flutterCompileSdkVersion
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -52,8 +56,8 @@ android {
 
     defaultConfig {
         applicationId "com.gamecalendar.game_calendar"
-        minSdk 21
-        targetSdk 34
+        minSdkVersion flutterMinSdkVersion
+        targetSdkVersion flutterTargetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
