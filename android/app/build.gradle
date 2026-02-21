@@ -4,6 +4,11 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def flutterProjectRoot = rootProject.projectDir.parentFile
+flutter {
+    source flutterProjectRoot
+}
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file("local.properties")
 if (!localPropertiesFile.exists()) {
@@ -79,10 +84,6 @@ android {
             signingConfig signingConfigs.release
         }
     }
-}
-
-flutter {
-    source "../.."
 }
 
 dependencies {}
