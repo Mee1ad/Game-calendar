@@ -2,8 +2,7 @@ name: Deploy Edge Functions
 
 on:
   push:
-    paths:
-      - 'supabase/**'
+    branches: [ "*" ]
   workflow_dispatch:
 
 jobs:
