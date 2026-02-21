@@ -38,3 +38,11 @@ final class GameFavoritesUpdated extends GameEvent {
   @override
   List<Object?> get props => [ids];
 }
+
+final class GameSearchChanged extends GameEvent {
+  const GameSearchChanged(this.query);
+  final String query;
+
+  @override
+  List<Object?> get props => [query];
+}

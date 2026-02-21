@@ -22,11 +22,13 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<GameFiltersChanged>(_onFiltersChanged);
     on<GameFavoriteToggled>(_onFavoriteToggled);
     on<GameFavoritesUpdated>(_onFavoritesUpdated);
+    on<GameSearchChanged>(_onSearchChanged);
   }
 
   final GamesRepository _gamesRepo;
   final FavoritesRepository _favoritesRepo;
   GameFilters? _currentFilters;
+  String _searchQuery = '';
   StreamSubscription? _favoritesSub;
 
   @override
@@ -47,9 +49,10 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       _currentFilters = const GameFilters();
       emit(GameSuccess(
         games: cached,
-        filteredGames: _applyFilters(cached, _currentFilters!),
+        filteredGames: _applyFilters(cached, _currentFilters!, _searchQuery),
         filters: _currentFilters!,
         favoriteIds: _favoritesRepo.getFavoriteIds(),
+        searchQuery: _searchQuery,
       ));
     }
 
@@ -62,9 +65,10 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       case Success(:final data):
         emit(GameSuccess(
           games: data,
-          filteredGames: _applyFilters(data, _currentFilters!),
+          filteredGames: _applyFilters(data, _currentFilters!, _searchQuery),
           filters: _currentFilters!,
           favoriteIds: _favoritesRepo.getFavoriteIds(),
+          searchQuery: _searchQuery,
         ));
     }
   }
@@ -83,10 +87,11 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       case Success(:final data):
         emit(GameSuccess(
           games: data,
-          filteredGames: _applyFilters(data, _currentFilters!),
+          filteredGames: _applyFilters(data, _currentFilters!, _searchQuery),
           filters: _currentFilters!,
           favoriteIds: _favoritesRepo.getFavoriteIds(),
           isRefreshing: false,
+          searchQuery: _searchQuery,
         ));
     }
   }
@@ -96,16 +101,22 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     final current = state;
     if (current is! GameSuccess) return;
 
-    final filtered = _applyFilters(current.games, e.filters);
+    final filtered = _applyFilters(current.games, e.filters, _searchQuery);
     emit(current.copyWith(
       filteredGames: filtered,
       filters: e.filters,
       favoriteIds: _favoritesRepo.getFavoriteIds(),
+      searchQuery: _searchQuery,
     ));
   }
 
-  List<Game> _applyFilters(List<Game> games, GameFilters f) {
+  List<Game> _applyFilters(List<Game> games, GameFilters f, [String query = '']) {
     var result = games;
+
+    if (query.isNotEmpty) {
+      final lower = query.toLowerCase();
+      result = result.where((g) => g.name.toLowerCase().contains(lower)).toList();
+    }
 
     if (f.platformIds.isNotEmpty) {
       result = result
@@ -153,5 +164,17 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     if (current is GameSuccess) {
       emit(current.copyWith(favoriteIds: e.ids));
     }
+  }
+
+  void _onSearchChanged(GameSearchChanged e, Emitter<GameState> emit) {
+    _searchQuery = e.query;
+    final current = state;
+    if (current is! GameSuccess) return;
+
+    final filtered = _applyFilters(current.games, current.filters, _searchQuery);
+    emit(current.copyWith(
+      filteredGames: filtered,
+      searchQuery: _searchQuery,
+    ));
   }
 }

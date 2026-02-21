@@ -69,7 +69,8 @@ class _GamesTab extends StatelessWidget {
           GameSuccess(
             :final filteredGames,
             :final favoriteIds,
-            :final isRefreshing
+            :final isRefreshing,
+            :final searchQuery,
           ) =>
             RefreshIndicator(
               onRefresh: () async {
@@ -80,6 +81,7 @@ class _GamesTab extends StatelessWidget {
                   GameListView(
                     games: filteredGames,
                     favoriteIds: favoriteIds,
+                    searchQuery: searchQuery,
                   ),
                   if (isRefreshing)
                     const Positioned(

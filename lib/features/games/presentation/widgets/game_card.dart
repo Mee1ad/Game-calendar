@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:game_calendar/core/widgets/game_card_morph.dart';
@@ -24,6 +25,10 @@ class GameCard extends StatelessWidget {
       child: GameCardMorph<void>(
         closedBuilder: (context, openContainer) => Card(
           clipBehavior: Clip.antiAlias,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           color: theme.colorScheme.surfaceContainerHighest,
           child: InkWell(
             onTap: openContainer,
@@ -35,10 +40,11 @@ class GameCard extends StatelessWidget {
                     AspectRatio(
                       aspectRatio: 3 / 4,
                       child: game.coverUrl != null
-                          ? Image.network(
-                              game.coverUrl!,
+                          ? CachedNetworkImage(
+                              imageUrl: game.coverUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _placeholder(theme),
+                              placeholder: (_, __) => _placeholder(theme),
+                              errorWidget: (_, __, ___) => _placeholder(theme),
                             )
                           : _placeholder(theme),
                     ),
