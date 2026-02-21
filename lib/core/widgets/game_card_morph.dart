@@ -8,12 +8,12 @@ class GameCardMorph<T> extends StatelessWidget {
     super.key,
     required this.closedBuilder,
     required this.openBuilder,
-    this.transitionType = OpenContainerTransitionType.fade,
+    this.transitionType = ContainerTransitionType.fade,
   });
 
   final CloseContainerBuilder closedBuilder;
   final OpenContainerBuilder<T> openBuilder;
-  final OpenContainerTransitionType transitionType;
+  final ContainerTransitionType transitionType;
 
   @override
   Widget build(BuildContext context) {
