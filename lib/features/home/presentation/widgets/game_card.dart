@@ -65,7 +65,7 @@ class GameCard extends StatelessWidget {
         child: Icon(
           Icons.sports_esports_outlined,
           size: 48,
-          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
         ),
       ),
     );
