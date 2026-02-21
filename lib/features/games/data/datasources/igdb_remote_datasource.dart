@@ -18,14 +18,67 @@ class IgdbRemoteDatasource {
     return _fetch(query);
   }
 
-  Future<Result<List<GameEntity>>> fetchPopular({int limit = 50}) async {
+  Future<Result<List<GameEntity>>> searchGames(
+    String query, {
+    Set<int> platformIds = const {},
+    Set<int> genreIds = const {},
+    int limit = 50,
+  }) async {
+    return _fetchStructured(
+      search: query,
+      platformIds: platformIds,
+      genreIds: genreIds,
+      limit: limit,
+    );
+  }
+
+  Future<Result<List<GameEntity>>> fetchFiltered({
+    Set<int> platformIds = const {},
+    Set<int> genreIds = const {},
+    int limit = 50,
+  }) async {
+    final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+    final conditions = <String>['first_release_date > $now', 'cover != null'];
+    if (platformIds.isNotEmpty) {
+      conditions.add('platforms = (${platformIds.join(",")})');
+    }
+    if (genreIds.isNotEmpty) {
+      conditions.add('genres = (${genreIds.join(",")})');
+    }
     final query = '''
       fields $_fields;
-      where first_release_date != null & cover != null;
-      sort first_release_date desc;
+      where ${conditions.join(' & ')};
+      sort first_release_date asc;
       limit $limit;
     ''';
     return _fetch(query);
+  }
+
+  Future<Result<List<GameEntity>>> _fetchStructured({
+    String search = '',
+    Set<int> platformIds = const {},
+    Set<int> genreIds = const {},
+    int limit = 50,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'endpoint': 'games',
+        'search': search,
+        'filters': {
+          if (platformIds.isNotEmpty) 'platformIds': platformIds.toList(),
+          if (genreIds.isNotEmpty) 'genreIds': genreIds.toList(),
+          'limit': limit,
+        },
+      };
+
+      final response = await Supabase.instance.client.functions.invoke(
+        'igdb-proxy',
+        body: body,
+      );
+      return _parseResponse(response);
+    } catch (e, st) {
+      return Failure(e.toString(), st);
+    }
   }
 
   Future<Result<List<GameEntity>>> _fetch(String query) async {
@@ -34,23 +87,26 @@ class IgdbRemoteDatasource {
         'igdb-proxy',
         body: {'endpoint': 'games', 'query': query},
       );
-
-      if (response.status != 200) {
-        final err =
-            response.data is Map ? (response.data as Map)['error'] : null;
-        return Failure(err?.toString() ?? 'Request failed: ${response.status}');
-      }
-
-      final data = response.data;
-      if (data is! List) return Failure('Unexpected response format');
-
-      final games = (data as List)
-          .whereType<Map<String, dynamic>>()
-          .map((e) => GameEntity.fromJson(e))
-          .toList();
-      return Success(games);
+      return _parseResponse(response);
     } catch (e, st) {
       return Failure(e.toString(), st);
     }
+  }
+
+  Result<List<GameEntity>> _parseResponse(dynamic response) {
+    if (response.status != 200) {
+      final err =
+          response.data is Map ? (response.data as Map)['error'] : null;
+      return Failure(err?.toString() ?? 'Request failed: ${response.status}');
+    }
+
+    final data = response.data;
+    if (data is! List) return Failure('Unexpected response format');
+
+    final games = (data as List)
+        .whereType<Map<String, dynamic>>()
+        .map((e) => GameEntity.fromJson(e))
+        .toList();
+    return Success(games);
   }
 }

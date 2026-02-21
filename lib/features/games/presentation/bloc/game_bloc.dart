@@ -27,7 +27,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
   final GamesRepository _gamesRepo;
   final FavoritesRepository _favoritesRepo;
-  GameFilters? _currentFilters;
+  GameFilters _currentFilters = const GameFilters();
   String _searchQuery = '';
   StreamSubscription? _favoritesSub;
 
@@ -46,49 +46,43 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
     final cached = await _gamesRepo.getCachedGames();
     if (cached.isNotEmpty) {
-      _currentFilters = const GameFilters();
       emit(GameSuccess(
         games: cached,
-        filteredGames: _applyFilters(cached, _currentFilters!, _searchQuery),
-        filters: _currentFilters!,
+        filteredGames: cached,
+        filters: _currentFilters,
         favoriteIds: _favoritesRepo.getFavoriteIds(),
-        searchQuery: _searchQuery,
       ));
     }
 
     final result = await _gamesRepo.loadAndSync();
-    _currentFilters = const GameFilters();
-
     switch (result) {
       case Failure(:final message):
         if (cached.isEmpty) emit(GameFailure(message));
       case Success(:final data):
         emit(GameSuccess(
           games: data,
-          filteredGames: _applyFilters(data, _currentFilters!, _searchQuery),
-          filters: _currentFilters!,
+          filteredGames: data,
+          filters: _currentFilters,
           favoriteIds: _favoritesRepo.getFavoriteIds(),
-          searchQuery: _searchQuery,
         ));
     }
   }
 
-  Future<void> _onRefresh(GameRefreshRequested e, Emitter<GameState> emit) async {
+  Future<void> _onRefresh(
+      GameRefreshRequested e, Emitter<GameState> emit) async {
     final current = state;
     if (current is! GameSuccess) return;
-        emit(current.copyWith(isRefreshing: true));
+    emit(current.copyWith(isRefreshing: true));
 
     final result = await _gamesRepo.refresh();
-    _currentFilters = current.filters;
-
     switch (result) {
       case Failure(:final message):
         emit(GameFailure(message));
       case Success(:final data):
         emit(GameSuccess(
           games: data,
-          filteredGames: _applyFilters(data, _currentFilters!, _searchQuery),
-          filters: _currentFilters!,
+          filteredGames: _applyReleaseStatus(data, _currentFilters),
+          filters: _currentFilters,
           favoriteIds: _favoritesRepo.getFavoriteIds(),
           isRefreshing: false,
           searchQuery: _searchQuery,
@@ -96,56 +90,140 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     }
   }
 
-  void _onFiltersChanged(GameFiltersChanged e, Emitter<GameState> emit) {
+  Future<void> _onFiltersChanged(
+      GameFiltersChanged e, Emitter<GameState> emit) async {
     _currentFilters = e.filters;
     final current = state;
     if (current is! GameSuccess) return;
 
-    final filtered = _applyFilters(current.games, e.filters, _searchQuery);
-    emit(current.copyWith(
-      filteredGames: filtered,
-      filters: e.filters,
-      favoriteIds: _favoritesRepo.getFavoriteIds(),
-      searchQuery: _searchQuery,
-    ));
+    final hasRemoteFilters =
+        e.filters.platformIds.isNotEmpty || e.filters.genreIds.isNotEmpty;
+
+    if (!hasRemoteFilters && _searchQuery.isEmpty) {
+      final filtered = _applyReleaseStatus(current.games, e.filters);
+      emit(current.copyWith(
+        filteredGames: filtered,
+        filters: e.filters,
+      ));
+      return;
+    }
+
+    emit(current.copyWith(isSearching: true, filters: e.filters));
+
+    final Result<List<Game>> result;
+    if (_searchQuery.isNotEmpty) {
+      result = await _gamesRepo.searchGames(
+        _searchQuery,
+        platformIds: e.filters.platformIds,
+        genreIds: e.filters.genreIds,
+      );
+    } else {
+      result = await _gamesRepo.fetchFiltered(
+        platformIds: e.filters.platformIds,
+        genreIds: e.filters.genreIds,
+      );
+    }
+
+    final s = state;
+    if (s is! GameSuccess) return;
+    switch (result) {
+      case Failure():
+        emit(s.copyWith(isSearching: false));
+      case Success(:final data):
+        emit(s.copyWith(
+          filteredGames: _applyReleaseStatus(data, _currentFilters),
+          isSearching: false,
+        ));
+    }
   }
 
-  List<Game> _applyFilters(List<Game> games, GameFilters f, [String query = '']) {
-    var result = games;
+  Future<void> _onSearchChanged(
+      GameSearchChanged e, Emitter<GameState> emit) async {
+    _searchQuery = e.query;
+    final current = state;
+    if (current is! GameSuccess) return;
 
-    if (query.isNotEmpty) {
-      final lower = query.toLowerCase();
-      result = result.where((g) => g.name.toLowerCase().contains(lower)).toList();
+    if (e.query.trim().isEmpty) {
+      final hasRemoteFilters = _currentFilters.platformIds.isNotEmpty ||
+          _currentFilters.genreIds.isNotEmpty;
+
+      if (hasRemoteFilters) {
+        emit(current.copyWith(
+            isSearching: true, searchQuery: '', filteredGames: []));
+        final result = await _gamesRepo.fetchFiltered(
+          platformIds: _currentFilters.platformIds,
+          genreIds: _currentFilters.genreIds,
+        );
+        final s = state;
+        if (s is! GameSuccess) return;
+        switch (result) {
+          case Failure():
+            emit(s.copyWith(
+              filteredGames: s.games,
+              isSearching: false,
+              searchQuery: '',
+            ));
+          case Success(:final data):
+            emit(s.copyWith(
+              filteredGames: _applyReleaseStatus(data, _currentFilters),
+              isSearching: false,
+              searchQuery: '',
+            ));
+        }
+      } else {
+        emit(current.copyWith(
+          filteredGames:
+              _applyReleaseStatus(current.games, _currentFilters),
+          searchQuery: '',
+          isSearching: false,
+        ));
+      }
+      return;
     }
 
-    if (f.platformIds.isNotEmpty) {
-      result = result
-          .where((g) => g.platformIds.any((p) => f.platformIds.contains(p)))
-          .toList();
+    emit(current.copyWith(isSearching: true, searchQuery: e.query));
+
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (_searchQuery != e.query) return;
+
+    final result = await _gamesRepo.searchGames(
+      e.query,
+      platformIds: _currentFilters.platformIds,
+      genreIds: _currentFilters.genreIds,
+    );
+    if (_searchQuery != e.query) return;
+
+    final s = state;
+    if (s is! GameSuccess) return;
+    switch (result) {
+      case Failure():
+        emit(s.copyWith(isSearching: false));
+      case Success(:final data):
+        emit(s.copyWith(
+          filteredGames: _applyReleaseStatus(data, _currentFilters),
+          isSearching: false,
+          searchQuery: e.query,
+        ));
     }
-    if (f.genreIds.isNotEmpty) {
-      result = result
-          .where((g) => g.genreIds.any((gr) => f.genreIds.contains(gr)))
-          .toList();
-    }
+  }
+
+  List<Game> _applyReleaseStatus(List<Game> games, GameFilters f) {
     switch (f.releaseStatus) {
       case ReleaseStatus.released:
         final now = DateTime.now();
-        result = result
-            .where((g) => g.releaseDate != null && g.releaseDate!.isBefore(now))
+        return games
+            .where(
+                (g) => g.releaseDate != null && g.releaseDate!.isBefore(now))
             .toList();
-        break;
       case ReleaseStatus.upcoming:
         final now = DateTime.now();
-        result = result
-            .where((g) =>
-                g.releaseDate != null && !g.releaseDate!.isBefore(now))
+        return games
+            .where(
+                (g) => g.releaseDate != null && !g.releaseDate!.isBefore(now))
             .toList();
-        break;
       case ReleaseStatus.all:
-        break;
+        return games;
     }
-    return result;
   }
 
   Future<void> _onFavoriteToggled(
@@ -153,9 +231,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     await _favoritesRepo.toggleFavorite(e.gameId);
     final current = state;
     if (current is GameSuccess) {
-      emit(current.copyWith(
-        favoriteIds: _favoritesRepo.getFavoriteIds(),
-      ));
+      emit(current.copyWith(favoriteIds: _favoritesRepo.getFavoriteIds()));
     }
   }
 
@@ -164,17 +240,5 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     if (current is GameSuccess) {
       emit(current.copyWith(favoriteIds: e.ids));
     }
-  }
-
-  void _onSearchChanged(GameSearchChanged e, Emitter<GameState> emit) {
-    _searchQuery = e.query;
-    final current = state;
-    if (current is! GameSuccess) return;
-
-    final filtered = _applyFilters(current.games, current.filters, _searchQuery);
-    emit(current.copyWith(
-      filteredGames: filtered,
-      searchQuery: _searchQuery,
-    ));
   }
 }

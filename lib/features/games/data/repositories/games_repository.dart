@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:game_calendar/core/result/result.dart';
 import 'package:game_calendar/features/games/data/adapters/game_hive_adapter.dart';
 import 'package:game_calendar/features/games/data/datasources/igdb_remote_datasource.dart';
+import 'package:game_calendar/features/games/data/entities/game_entity.dart';
 import 'package:game_calendar/features/games/domain/models/game.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -34,12 +35,8 @@ class GamesRepository {
             ? Success<List<Game>>(cached)
             : Failure<List<Game>>(message, stackTrace);
       case Success(:final data):
-        await box.clear();
-        for (final e in data) {
-          await box.put(e.id, GameHiveModel.fromEntity(e));
-        }
-        return Success<List<Game>>(
-            data.map((e) => e.toDomain()).toList());
+        await _cacheEntities(data);
+        return Success<List<Game>>(data.map((e) => e.toDomain()).toList());
     }
   }
 
@@ -49,17 +46,53 @@ class GamesRepository {
       case Failure(:final message, :final stackTrace):
         return Failure<List<Game>>(message, stackTrace);
       case Success(:final data):
-        await box.clear();
-        for (final e in data) {
-          await box.put(e.id, GameHiveModel.fromEntity(e));
-        }
-        return Success<List<Game>>(
-            data.map((e) => e.toDomain()).toList());
+        await _cacheEntities(data);
+        return Success<List<Game>>(data.map((e) => e.toDomain()).toList());
     }
+  }
+
+  Future<Result<List<Game>>> searchGames(
+    String query, {
+    Set<int> platformIds = const {},
+    Set<int> genreIds = const {},
+  }) async {
+    final result = await _remote.searchGames(
+      query,
+      platformIds: platformIds,
+      genreIds: genreIds,
+    );
+    return _mapResult(result);
+  }
+
+  Future<Result<List<Game>>> fetchFiltered({
+    Set<int> platformIds = const {},
+    Set<int> genreIds = const {},
+  }) async {
+    final result = await _remote.fetchFiltered(
+      platformIds: platformIds,
+      genreIds: genreIds,
+    );
+    return _mapResult(result);
   }
 
   Game? getGame(int id) {
     final m = box.get(id);
     return m?.toEntity().toDomain();
+  }
+
+  Result<List<Game>> _mapResult(Result<List<GameEntity>> result) {
+    switch (result) {
+      case Failure(:final message, :final stackTrace):
+        return Failure(message, stackTrace);
+      case Success(:final data):
+        return Success(data.map((e) => e.toDomain()).toList());
+    }
+  }
+
+  Future<void> _cacheEntities(List<GameEntity> entities) async {
+    await box.clear();
+    for (final e in entities) {
+      await box.put(e.id, GameHiveModel.fromEntity(e));
+    }
   }
 }

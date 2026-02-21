@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:game_calendar/core/widgets/shimmer_loading.dart';
 import 'package:game_calendar/features/games/domain/models/game.dart';
 import 'package:game_calendar/features/games/presentation/bloc/game_bloc.dart';
 import 'package:game_calendar/features/games/presentation/widgets/game_card.dart';
@@ -10,11 +11,13 @@ class GameListView extends StatefulWidget {
     required this.games,
     required this.favoriteIds,
     required this.searchQuery,
+    this.isSearching = false,
   });
 
   final List<Game> games;
   final Set<int> favoriteIds;
   final String searchQuery;
+  final bool isSearching;
 
   @override
   State<GameListView> createState() => _GameListViewState();
@@ -83,19 +86,25 @@ class _GameListViewState extends State<GameListView> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Text(
-              'Coming Soon',
+              widget.searchQuery.isNotEmpty
+                  ? 'Search Results'
+                  : 'Coming Soon',
               style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
-        if (widget.games.isEmpty)
+        if (widget.isSearching)
+          _buildShimmerGrid()
+        else if (widget.games.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
             child: Center(
               child: Text(
-                'No games found',
+                widget.searchQuery.isNotEmpty
+                    ? 'No results for "${widget.searchQuery}"'
+                    : 'No games found',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -113,13 +122,12 @@ class _GameListViewState extends State<GameListView> {
                 mainAxisSpacing: 12,
               ),
               delegate: SliverChildBuilderDelegate(
-                (context, index) => RepaintBoundary(
-                  child: GameCard(
-                    game: widget.games[index],
-                    isFavorite: widget.favoriteIds.contains(widget.games[index].id),
-                    onFavoriteTap: () =>
-                        bloc.add(GameFavoriteToggled(widget.games[index].id)),
-                  ),
+                (context, index) => GameCard(
+                  game: widget.games[index],
+                  isFavorite:
+                      widget.favoriteIds.contains(widget.games[index].id),
+                  onFavoriteTap: () =>
+                      bloc.add(GameFavoriteToggled(widget.games[index].id)),
                 ),
                 childCount: widget.games.length,
               ),
@@ -127,6 +135,26 @@ class _GameListViewState extends State<GameListView> {
           ),
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
+    );
+  }
+
+  Widget _buildShimmerGrid() {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.6,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => const RepaintBoundary(
+            child: ShimmerGameCard(),
+          ),
+          childCount: 6,
+        ),
+      ),
     );
   }
 }

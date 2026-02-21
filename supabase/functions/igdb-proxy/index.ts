@@ -3,10 +3,9 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 const IGDB_BASE = "https://api.igdb.com/v4";
 const TWITCH_TOKEN_URL = "https://id.twitch.tv/oauth2/token";
 
-interface Env {
-  IGDB_CLIENT_ID: string;
-  IGDB_CLIENT_SECRET: string;
-}
+const DEFAULT_FIELDS =
+  "name,cover.url,first_release_date,summary,screenshots.url,videos.video_id," +
+  "total_rating,platforms,genres";
 
 function upgradeImageUrl(url: string): string {
   if (!url || typeof url !== "string") return url;
@@ -18,21 +17,46 @@ function upgradeImageUrl(url: string): string {
 
 function upgradeImageUrls<T>(obj: T): T {
   if (obj === null || obj === undefined) return obj;
-  if (Array.isArray(obj)) {
-    return obj.map(upgradeImageUrls) as T;
-  }
+  if (Array.isArray(obj)) return obj.map(upgradeImageUrls) as T;
   if (typeof obj === "object") {
     const result: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(obj)) {
-      if (k === "url" || k.endsWith(".url")) {
-        result[k] = upgradeImageUrl(String(v));
-      } else {
-        result[k] = upgradeImageUrls(v);
-      }
+      result[k] = k === "url" || k.endsWith(".url")
+        ? upgradeImageUrl(String(v))
+        : upgradeImageUrls(v);
     }
     return result as T;
   }
   return obj;
+}
+
+function buildSearchQuery(
+  search: string,
+  filters?: { platformIds?: number[]; genreIds?: number[]; limit?: number },
+): string {
+  const parts: string[] = [];
+
+  if (search) {
+    parts.push(`search "${search.replace(/"/g, '\\"')}";`);
+  }
+
+  parts.push(`fields ${DEFAULT_FIELDS};`);
+
+  const conditions: string[] = ["cover != null"];
+  if (filters?.platformIds?.length) {
+    conditions.push(`platforms = (${filters.platformIds.join(",")})`);
+  }
+  if (filters?.genreIds?.length) {
+    conditions.push(`genres = (${filters.genreIds.join(",")})`);
+  }
+  parts.push(`where ${conditions.join(" & ")};`);
+
+  if (!search) {
+    parts.push("sort first_release_date asc;");
+  }
+
+  parts.push(`limit ${filters?.limit || 50};`);
+  return parts.join("\n");
 }
 
 async function getTwitchToken(clientId: string, clientSecret: string): Promise<string> {
@@ -73,37 +97,44 @@ Deno.serve(async (req: Request) => {
   if (!clientId || !clientSecret) {
     return new Response(
       JSON.stringify({ error: "IGDB credentials not configured" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 
   try {
     const body = await req.json();
-    const { endpoint, query } = body as { endpoint: string; query: string };
-    if (!endpoint || !query) {
+    const { endpoint, query, search, filters } = body as {
+      endpoint: string;
+      query?: string;
+      search?: string;
+      filters?: { platformIds?: number[]; genreIds?: number[]; limit?: number };
+    };
+
+    if (!endpoint) {
       return new Response(
-        JSON.stringify({ error: "endpoint and query required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ error: "endpoint is required" }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
+    const igdbQuery = query ?? buildSearchQuery(search ?? "", filters);
+
     const token = await getTwitchToken(clientId, clientSecret);
-    const url = `${IGDB_BASE}/${endpoint}`;
-    const igdbRes = await fetch(url, {
+    const igdbRes = await fetch(`${IGDB_BASE}/${endpoint}`, {
       method: "POST",
       headers: {
         "Client-ID": clientId,
         Authorization: `Bearer ${token}`,
         "Content-Type": "text/plain",
       },
-      body: query,
+      body: igdbQuery,
     });
 
     if (!igdbRes.ok) {
       const text = await igdbRes.text();
       return new Response(
         JSON.stringify({ error: `IGDB error: ${igdbRes.status}`, details: text }),
-        { status: igdbRes.status, headers: { "Content-Type": "application/json" } }
+        { status: igdbRes.status, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -119,7 +150,7 @@ Deno.serve(async (req: Request) => {
   } catch (e) {
     return new Response(
       JSON.stringify({ error: String(e) }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 });
