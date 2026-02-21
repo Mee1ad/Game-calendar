@@ -11,7 +11,7 @@ class GameCalendarApp extends StatelessWidget {
       title: 'Game Calendar',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.dark,
       home: const HomePage(),
     );
   }
