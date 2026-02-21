@@ -29,7 +29,9 @@ class GamesRepository {
     final result = await _remote.fetchComingSoon();
 
     return switch (result) {
-      Failure() => cached.isNotEmpty ? Success(cached) : result,
+      Failure(:final message, :final stackTrace) => cached.isNotEmpty
+          ? Success<List<Game>>(cached)
+          : Failure<List<Game>>(message, stackTrace),
       Success(:final data) => () async {
           await box.clear();
           for (final e in data) {
@@ -44,7 +46,8 @@ class GamesRepository {
   Future<Result<List<Game>>> refresh() async {
     final result = await _remote.fetchComingSoon();
     return switch (result) {
-      Failure() => result,
+      Failure(:final message, :final stackTrace) =>
+          Failure<List<Game>>(message, stackTrace),
       Success(:final data) => () async {
           await box.clear();
           for (final e in data) {
