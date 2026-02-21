@@ -18,17 +18,10 @@ tasks.register("clean", Delete) {
 }
 
 subprojects {
-    project.evaluationDependsOn(':app')
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
-                if (namespace == null) {
-                    namespace = project.group
-                }
-                compileSdkVersion 34
-                defaultConfig {
-                    targetSdkVersion 34
-                }
+    project.configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'com.android.support' && !details.requested.name.contains('multidex')) {
+                details.useVersion "28.0.0"
             }
         }
     }

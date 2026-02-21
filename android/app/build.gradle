@@ -4,10 +4,6 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-def flutterCompileSdkVersion = 34
-def flutterMinSdkVersion = 21
-def flutterTargetSdkVersion = 34
-
 flutter {
     source = rootProject.file("..").absolutePath
 }
@@ -38,7 +34,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.gamecalendar.game_calendar"
-    compileSdkVersion flutterCompileSdkVersion
+    compileSdkVersion 34
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -56,8 +52,8 @@ android {
 
     defaultConfig {
         applicationId "com.gamecalendar.game_calendar"
-        minSdkVersion flutterMinSdkVersion
-        targetSdkVersion flutterTargetSdkVersion
+        minSdkVersion 21
+        targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
