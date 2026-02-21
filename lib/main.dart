@@ -6,7 +6,6 @@ import 'package:game_calendar/features/favorites/data/repositories/favorites_rep
 import 'package:game_calendar/features/favorites/presentation/bloc/favorites_bloc.dart';
 import 'package:game_calendar/features/games/data/repositories/games_repository.dart';
 import 'package:game_calendar/features/games/presentation/bloc/game_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -78,8 +77,8 @@ class _AppLoaderState extends State<AppLoader> {
   Widget build(BuildContext context) {
     if (_loading) {
       return MaterialApp(
-        home: Scaffold(
-          body: Center(child: CircularProgressIndicator()),
+        home: const Scaffold(
+          body: const Center(child: CircularProgressIndicator()),
         ),
       );
     }

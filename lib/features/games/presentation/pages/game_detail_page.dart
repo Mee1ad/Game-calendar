@@ -77,7 +77,7 @@ class GameDetailPage extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.star, color: Colors.amber, size: 20),
+                        const Icon(Icons.star, color: Colors.amber, size: 20),
                         const SizedBox(width: 4),
                         Text(
                           '${(game.totalRating! / 10).toStringAsFixed(1)}/10',
