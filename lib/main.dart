@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:game_calendar/app.dart';
+import 'package:game_calendar/core/di/injection.dart';
+import 'package:game_calendar/features/favorites/data/repositories/favorites_repository.dart';
+import 'package:game_calendar/features/favorites/presentation/bloc/favorites_bloc.dart';
+import 'package:game_calendar/features/games/data/repositories/games_repository.dart';
+import 'package:game_calendar/features/games/presentation/bloc/game_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:game_calendar/app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,10 +47,20 @@ class _AppLoaderState extends State<AppLoader> {
         return;
       }
 
-      await Hive.initFlutter();
+      await initHive();
       await Supabase.initialize(url: url, anonKey: anonKey);
       await Supabase.instance.client.auth.signInAnonymously();
-      if (mounted) setState(() => _loading = false);
+
+      final gamesRepo = await createGamesRepository();
+      final favoritesRepo = await createFavoritesRepository();
+
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _gamesRepo = gamesRepo;
+          _favoritesRepo = favoritesRepo;
+        });
+      }
     } catch (e, st) {
       if (mounted) {
         setState(() {
@@ -54,6 +70,9 @@ class _AppLoaderState extends State<AppLoader> {
       }
     }
   }
+
+  GamesRepository? _gamesRepo;
+  FavoritesRepository? _favoritesRepo;
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +103,28 @@ class _AppLoaderState extends State<AppLoader> {
         ),
       );
     }
-    return const GameCalendarApp();
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider<GamesRepository>.value(value: _gamesRepo!),
+        RepositoryProvider<FavoritesRepository>.value(value: _favoritesRepo!),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (ctx) => GameBloc(
+              gamesRepo: ctx.read<GamesRepository>(),
+              favoritesRepo: ctx.read<FavoritesRepository>(),
+            )..add(const GameLoadRequested()),
+          ),
+          BlocProvider(
+            create: (ctx) => FavoritesBloc(
+              favoritesRepo: ctx.read<FavoritesRepository>(),
+              gamesRepo: ctx.read<GamesRepository>(),
+            ),
+          ),
+        ],
+        child: const GameCalendarApp(),
+      ),
+    );
   }
 }
