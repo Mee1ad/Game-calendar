@@ -28,35 +28,34 @@ class GamesRepository {
     final cached = await _allFromHive();
     final result = await _remote.fetchComingSoon();
 
-    return switch (result) {
-      Failure(:final message, :final stackTrace) => cached.isNotEmpty
-          ? Success<List<Game>>(cached)
-          : Failure<List<Game>>(message, stackTrace),
-      Success(:final data) => () async {
-          await box.clear();
-          for (final e in data) {
-            await box.put(e.id, GameHiveModel.fromEntity(e));
-          }
-          return Success<List<Game>>(
-              data.map((e) => e.toDomain()).toList());
-        }(),
-    };
+    switch (result) {
+      case Failure(:final message, :final stackTrace):
+        return cached.isNotEmpty
+            ? Success<List<Game>>(cached)
+            : Failure<List<Game>>(message, stackTrace);
+      case Success(:final data):
+        await box.clear();
+        for (final e in data) {
+          await box.put(e.id, GameHiveModel.fromEntity(e));
+        }
+        return Success<List<Game>>(
+            data.map((e) => e.toDomain()).toList());
+    }
   }
 
   Future<Result<List<Game>>> refresh() async {
     final result = await _remote.fetchComingSoon();
-    return switch (result) {
-      Failure(:final message, :final stackTrace) =>
-          Failure<List<Game>>(message, stackTrace),
-      Success(:final data) => () async {
-          await box.clear();
-          for (final e in data) {
-            await box.put(e.id, GameHiveModel.fromEntity(e));
-          }
-          return Success<List<Game>>(
-              data.map((e) => e.toDomain()).toList());
-        }(),
-    };
+    switch (result) {
+      case Failure(:final message, :final stackTrace):
+        return Failure<List<Game>>(message, stackTrace);
+      case Success(:final data):
+        await box.clear();
+        for (final e in data) {
+          await box.put(e.id, GameHiveModel.fromEntity(e));
+        }
+        return Success<List<Game>>(
+            data.map((e) => e.toDomain()).toList());
+    }
   }
 
   Game? getGame(int id) {
