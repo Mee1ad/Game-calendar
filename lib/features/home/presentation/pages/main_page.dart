@@ -95,7 +95,6 @@ class _GamesTab extends StatelessWidget {
                 ],
               ),
             ),
-          _ => const SizedBox.shrink(),
         };
       },
     );

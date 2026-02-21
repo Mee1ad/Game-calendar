@@ -96,14 +96,14 @@ class IgdbRemoteDatasource {
   Result<List<GameEntity>> _parseResponse(dynamic response) {
     if (response.status != 200) {
       final err =
-          response.data is Map ? (response.data as Map)['error'] : null;
+          response.data is Map ? response.data['error'] : null;
       return Failure(err?.toString() ?? 'Request failed: ${response.status}');
     }
 
     final data = response.data;
     if (data is! List) return Failure('Unexpected response format');
 
-    final games = (data as List)
+    final games = data
         .whereType<Map<String, dynamic>>()
         .map((e) => GameEntity.fromJson(e))
         .toList();

@@ -26,7 +26,6 @@ class FavoritesPage extends StatelessWidget {
                 groupedByMonth: groupedByMonth,
                 favoriteIds: favoriteIds,
               ),
-            _ => const SizedBox.shrink(),
           };
         },
       ),
