@@ -1,12 +1,12 @@
-def flutterCompileSdkVersion = 34
-def flutterMinSdkVersion = 21
-def flutterTargetSdkVersion = 34
-
 plugins {
     id "com.android.application"
     id "org.jetbrains.kotlin.android"
     id "dev.flutter.flutter-gradle-plugin"
 }
+
+def flutterCompileSdkVersion = 34
+def flutterMinSdkVersion = 21
+def flutterTargetSdkVersion = 34
 
 flutter {
     source = rootProject.file("..").absolutePath
