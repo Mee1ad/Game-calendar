@@ -23,6 +23,14 @@ final class GameFiltersChanged extends GameEvent {
   List<Object?> get props => [filters];
 }
 
+final class GameListTypeChanged extends GameEvent {
+  const GameListTypeChanged(this.listType);
+  final GameListType listType;
+
+  @override
+  List<Object?> get props => [listType];
+}
+
 final class GameFavoriteToggled extends GameEvent {
   const GameFavoriteToggled(this.gameId);
   final int gameId;

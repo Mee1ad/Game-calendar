@@ -9,39 +9,69 @@ class FavoritesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => context.read<FavoritesBloc>()
-        ..add(const FavoritesLoadRequested()),
-      child: BlocBuilder<FavoritesBloc, FavoritesState>(
-        builder: (context, state) {
-          return switch (state) {
-            FavoritesInitial() || FavoritesLoading() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-            FavoritesError(:final message) => Center(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Favorites'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: BlocProvider(
+        create: (context) => context.read<FavoritesBloc>()
+          ..add(const FavoritesLoadRequested()),
+        child: BlocBuilder<FavoritesBloc, FavoritesState>(
+          builder: (context, state) {
+            try {
+              return switch (state) {
+                FavoritesInitial() || FavoritesLoading() => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                FavoritesError(:final message) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline, size: 48,
+                                color: Theme.of(context).colorScheme.error),
+                            const SizedBox(height: 16),
+                            Text(message, textAlign: TextAlign.center),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                FavoritesLoaded(
+                  :final groupedByMonth,
+                  :final favoriteIds
+                ) =>
+                  _FavoritesList(
+                    groupedByMonth: groupedByMonth,
+                    favoriteIds: favoriteIds,
+                  ),
+              };
+            } catch (e, st) {
+              return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 48,
-                          color: Theme.of(context).colorScheme.error),
-                      const SizedBox(height: 16),
-                      Text(message, textAlign: TextAlign.center),
-                    ],
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 48,
+                            color: Theme.of(context).colorScheme.error),
+                        const SizedBox(height: 16),
+                        Text('Error: $e', textAlign: TextAlign.center),
+                        const SizedBox(height: 16),
+                        Text('$st', style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            FavoritesLoaded(
-              :final groupedByMonth,
-              :final favoriteIds
-            ) =>
-              _FavoritesList(
-                groupedByMonth: groupedByMonth,
-                favoriteIds: favoriteIds,
-              ),
-          };
-        },
+              );
+            }
+          },
+        ),
       ),
     );
   }

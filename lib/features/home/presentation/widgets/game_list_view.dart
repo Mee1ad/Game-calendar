@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:game_calendar/core/widgets/shimmer_loading.dart';
+import 'package:game_calendar/features/games/domain/filter_models.dart';
 import 'package:game_calendar/features/games/domain/models/game.dart';
 import 'package:game_calendar/features/games/presentation/bloc/game_bloc.dart';
 import 'package:game_calendar/features/games/presentation/widgets/game_card.dart';
@@ -11,12 +12,14 @@ class GameListView extends StatefulWidget {
     required this.games,
     required this.favoriteIds,
     required this.searchQuery,
+    required this.listType,
     this.isSearching = false,
   });
 
   final List<Game> games;
   final Set<int> favoriteIds;
   final String searchQuery;
+  final GameListType listType;
   final bool isSearching;
 
   @override
@@ -84,11 +87,33 @@ class _GameListViewState extends State<GameListView> {
         ),
         SliverToBoxAdapter(
           child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: GameListType.values.map((t) {
+                  final selected = widget.listType == t;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(_listTypeLabel(t)),
+                      selected: selected,
+                      onSelected: (_) =>
+                          bloc.add(GameListTypeChanged(t)),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Text(
               widget.searchQuery.isNotEmpty
                   ? 'Search Results'
-                  : 'Coming Soon',
+                  : _listTypeLabel(widget.listType),
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -136,6 +161,15 @@ class _GameListViewState extends State<GameListView> {
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
     );
+  }
+
+  String _listTypeLabel(GameListType t) {
+    return switch (t) {
+      GameListType.popular => 'Popular',
+      GameListType.upcoming => 'Upcoming',
+      GameListType.top => 'Top',
+      GameListType.recent => 'Recent',
+    };
   }
 
   Widget _buildShimmerGrid() {

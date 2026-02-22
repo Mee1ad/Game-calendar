@@ -59,7 +59,7 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
         favoriteIds: _favoritesRepo.getFavoriteIds(),
       ));
     } catch (err, st) {
-      emit(FavoritesStateX.error(err.toString()));
+      emit(FavoritesStateX.error('$err\n\n$st'));
     }
   }
 

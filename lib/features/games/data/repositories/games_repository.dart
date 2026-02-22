@@ -25,9 +25,17 @@ class GamesRepository {
 
   Future<List<Game>> getCachedGames() => _allFromHive();
 
-  Future<Result<List<Game>>> loadAndSync() async {
+  Future<Result<List<Game>>> loadAndSync({
+    String listType = 'popular',
+    Set<int> platformIds = const {},
+    Set<int> genreIds = const {},
+  }) async {
     final cached = await _allFromHive();
-    final result = await _remote.fetchComingSoon();
+    final result = await _remote.fetchByListType(
+      listType,
+      platformIds: platformIds,
+      genreIds: genreIds,
+    );
 
     switch (result) {
       case Failure(:final message, :final stackTrace):
@@ -40,8 +48,16 @@ class GamesRepository {
     }
   }
 
-  Future<Result<List<Game>>> refresh() async {
-    final result = await _remote.fetchComingSoon();
+  Future<Result<List<Game>>> refresh({
+    String listType = 'popular',
+    Set<int> platformIds = const {},
+    Set<int> genreIds = const {},
+  }) async {
+    final result = await _remote.fetchByListType(
+      listType,
+      platformIds: platformIds,
+      genreIds: genreIds,
+    );
     switch (result) {
       case Failure(:final message, :final stackTrace):
         return Failure<List<Game>>(message, stackTrace);
@@ -65,10 +81,12 @@ class GamesRepository {
   }
 
   Future<Result<List<Game>>> fetchFiltered({
+    String listType = 'popular',
     Set<int> platformIds = const {},
     Set<int> genreIds = const {},
   }) async {
-    final result = await _remote.fetchFiltered(
+    final result = await _remote.fetchByListType(
+      listType,
       platformIds: platformIds,
       genreIds: genreIds,
     );
