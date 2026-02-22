@@ -29,11 +29,14 @@ class GameCard extends StatelessWidget {
           onTap: open,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: Container(
-              color: Colors.white.withOpacity(0.05),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [_cover(), _glassInfo(), _favButton()],
+            child: AspectRatio(
+              aspectRatio: 3 / 4,
+              child: Container(
+                color: const Color(0xFF1A1A2E),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [_cover(), _glassInfo(), _favButton()],
+                ),
               ),
             ),
           ),
@@ -78,32 +81,16 @@ class GameCard extends StatelessWidget {
                 ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  game.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.rajdhani(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    height: 1.2,
-                  ),
-                ),
-                if (game.releaseDate != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    _formatDate(game.releaseDate!),
-                    style: GoogleFonts.rajdhani(
-                      fontSize: 13,
-                      color: Colors.white60,
-                    ),
-                  ),
-                ],
-              ],
+            child: Text(
+              game.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.rajdhani(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                height: 1.2,
+              ),
             ),
           ),
         ),
@@ -143,7 +130,4 @@ class GameCard extends StatelessWidget {
               Icon(Icons.sports_esports, size: 48, color: Colors.white24),
         ),
       );
-
-  String _formatDate(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
