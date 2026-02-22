@@ -169,7 +169,7 @@ class _GameListViewState extends State<GameListView> {
           final monthKey = sortedKeys[index];
           final games = grouped[monthKey]!;
           return Padding(
-            padding: const EdgeInsets.fromLTRB(16, index == 0 ? 0 : 24, 16, 12),
+            padding: EdgeInsets.fromLTRB(16, index == 0 ? 0 : 24, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
