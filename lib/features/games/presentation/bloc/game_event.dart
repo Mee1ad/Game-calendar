@@ -11,6 +11,14 @@ final class GameLoadRequested extends GameEvent {
   const GameLoadRequested();
 }
 
+final class GameListTypeChanged extends GameEvent {
+  const GameListTypeChanged(this.listType);
+  final GameListType listType;
+
+  @override
+  List<Object?> get props => [listType];
+}
+
 final class GameRefreshRequested extends GameEvent {
   const GameRefreshRequested();
 }

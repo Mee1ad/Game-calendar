@@ -29,6 +29,7 @@ final class GameSuccess extends GameState {
     required this.filteredGames,
     required this.filters,
     required this.favoriteIds,
+    required this.listType,
     this.isRefreshing = false,
     this.isSearching = false,
     this.searchQuery = '',
@@ -38,6 +39,7 @@ final class GameSuccess extends GameState {
   final List<Game> filteredGames;
   final GameFilters filters;
   final Set<int> favoriteIds;
+  final GameListType listType;
   final bool isRefreshing;
   final bool isSearching;
   final String searchQuery;
@@ -47,6 +49,7 @@ final class GameSuccess extends GameState {
     List<Game>? filteredGames,
     GameFilters? filters,
     Set<int>? favoriteIds,
+    GameListType? listType,
     bool? isRefreshing,
     bool? isSearching,
     String? searchQuery,
@@ -56,6 +59,7 @@ final class GameSuccess extends GameState {
         filteredGames: filteredGames ?? this.filteredGames,
         filters: filters ?? this.filters,
         favoriteIds: favoriteIds ?? this.favoriteIds,
+        listType: listType ?? this.listType,
         isRefreshing: isRefreshing ?? this.isRefreshing,
         isSearching: isSearching ?? this.isSearching,
         searchQuery: searchQuery ?? this.searchQuery,
@@ -67,6 +71,7 @@ final class GameSuccess extends GameState {
         filteredGames,
         filters,
         favoriteIds,
+        listType,
         isRefreshing,
         isSearching,
         searchQuery,

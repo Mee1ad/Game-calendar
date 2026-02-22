@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:game_calendar/features/games/domain/filter_models.dart';
 import 'package:game_calendar/features/games/presentation/bloc/game_bloc.dart';
 import 'package:game_calendar/features/games/presentation/widgets/filter_sheet.dart';
 import 'package:game_calendar/features/favorites/presentation/pages/favorites_page.dart';
@@ -12,48 +13,40 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: AppBar(
-          title: const Text('Game Calendar'),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          actions: [
-            BlocBuilder<GameBloc, GameState>(
-              buildWhen: (a, b) => a is GameSuccess && b is GameSuccess,
-              builder: (context, state) {
-                if (state is! GameSuccess) return const SizedBox.shrink();
-                return IconButton(
-                  icon: const Icon(Icons.filter_list),
-                  onPressed: () => showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (ctx) => FilterSheet(
-                      filters: state.filters,
-                      onFiltersChanged: (f) =>
-                          context.read<GameBloc>().add(GameFiltersChanged(f)),
-                    ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        title: const Text('Game Calendar'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          BlocBuilder<GameBloc, GameState>(
+            buildWhen: (a, b) => a is GameSuccess && b is GameSuccess,
+            builder: (context, state) {
+              if (state is! GameSuccess) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (ctx) => FilterSheet(
+                    filters: state.filters,
+                    onFiltersChanged: (f) =>
+                        context.read<GameBloc>().add(GameFiltersChanged(f)),
                   ),
-                );
-              },
-            ),
-          ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.sports_esports), text: 'Coming Soon'),
-              Tab(icon: Icon(Icons.favorite), text: 'Favorites'),
-            ],
+                ),
+              );
+            },
           ),
-        ),
-        body: TabBarView(
-          children: [
-            _GamesTab(),
-            const FavoritesPage(),
-          ],
-        ),
+          IconButton(
+            icon: const Icon(Icons.favorite),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const FavoritesPage()),
+            ),
+          ),
+        ],
       ),
+      body: _GamesTab(),
     );
   }
 }
@@ -72,6 +65,7 @@ class _GamesTab extends StatelessWidget {
             :final isRefreshing,
             :final isSearching,
             :final searchQuery,
+            :final listType,
           ) =>
             RefreshIndicator(
               onRefresh: () async {
@@ -83,7 +77,9 @@ class _GamesTab extends StatelessWidget {
                     games: filteredGames,
                     favoriteIds: favoriteIds,
                     searchQuery: searchQuery,
+                    listType: listType,
                     isSearching: isSearching,
+                    isRefreshing: isRefreshing,
                   ),
                   if (isRefreshing)
                     const Positioned(

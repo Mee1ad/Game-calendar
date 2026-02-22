@@ -15,11 +15,13 @@ class GameCard extends StatelessWidget {
     required this.game,
     required this.isFavorite,
     required this.onFavoriteTap,
+    this.showDateOnCard = true,
   });
 
   final Game game;
   final bool isFavorite;
   final VoidCallback onFavoriteTap;
+  final bool showDateOnCard;
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +95,7 @@ class GameCard extends StatelessWidget {
                     height: 1.2,
                   ),
                 ),
-                if (game.releaseDate != null) ...[
+                if (showDateOnCard && game.releaseDate != null) ...[
                   const SizedBox(height: 4),
                   Text(
                     _formatDate(game.releaseDate!),

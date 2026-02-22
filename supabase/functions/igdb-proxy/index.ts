@@ -5,14 +5,16 @@ const TWITCH_TOKEN_URL = "https://id.twitch.tv/oauth2/token";
 
 const DEFAULT_FIELDS =
   "name,cover.url,first_release_date,summary,screenshots.url,videos.video_id," +
-  "total_rating,platforms,genres";
+  "total_rating,total_rating_count,platforms,genres";
 
 function upgradeImageUrl(url: string): string {
   if (!url || typeof url !== "string") return url;
   return url
-    .replace(/t_thumb/g, "t_cover_big")
-    .replace(/t_cover_small/g, "t_cover_big")
-    .replace(/t_screenshot_med/g, "t_cover_big");
+    .replace(/t_thumb/g, "t_cover_big_2x")
+    .replace(/t_cover_small/g, "t_cover_big_2x")
+    .replace(/t_cover_big/g, "t_cover_big_2x")
+    .replace(/t_720p/g, "t_cover_big_2x")
+    .replace(/t_screenshot_med/g, "t_cover_big_2x");
 }
 
 function upgradeImageUrls<T>(obj: T): T {
@@ -59,6 +61,52 @@ function buildSearchQuery(
   return parts.join("\n");
 }
 
+function buildListQuery(
+  listType: "popular" | "upcoming" | "top" | "recent",
+  search: string,
+  filters?: { platformIds?: number[]; genreIds?: number[]; limit?: number },
+): string {
+  if (search) return buildSearchQuery(search, filters);
+
+  const now = Math.floor(Date.now() / 1000);
+  const limit = filters?.limit || 50;
+
+  const conditions: string[] = ["cover != null"];
+  if (filters?.platformIds?.length) {
+    conditions.push(`platforms = (${filters.platformIds.join(",")})`);
+  }
+  if (filters?.genreIds?.length) {
+    conditions.push(`genres = (${filters.genreIds.join(",")})`);
+  }
+
+  let sortClause: string;
+  switch (listType) {
+    case "popular":
+      conditions.push("total_rating_count > 0");
+      sortClause = "sort total_rating_count desc;";
+      break;
+    case "upcoming":
+      conditions.push(`first_release_date > ${now}`);
+      sortClause = "sort first_release_date asc;";
+      break;
+    case "top":
+      conditions.push("total_rating_count > 10");
+      sortClause = "sort total_rating desc;";
+      break;
+    case "recent":
+      conditions.push(`first_release_date < ${now}`);
+      sortClause = "sort first_release_date desc;";
+      break;
+    default:
+      sortClause = "sort popularity desc;";
+  }
+
+  return `fields ${DEFAULT_FIELDS};
+where ${conditions.join(" & ")};
+${sortClause}
+limit ${limit};`;
+}
+
 async function getTwitchToken(clientId: string, clientSecret: string): Promise<string> {
   const params = new URLSearchParams({
     client_id: clientId,
@@ -103,11 +151,12 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    const { endpoint, query, search, filters } = body as {
+    const { endpoint, query, search, filters, listType } = body as {
       endpoint: string;
       query?: string;
       search?: string;
       filters?: { platformIds?: number[]; genreIds?: number[]; limit?: number };
+      listType?: "popular" | "upcoming" | "top" | "recent";
     };
 
     if (!endpoint) {
@@ -117,7 +166,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const igdbQuery = query ?? buildSearchQuery(search ?? "", filters);
+    const igdbQuery = query ?? buildListQuery(listType ?? "popular", search ?? "", filters);
 
     const token = await getTwitchToken(clientId, clientSecret);
     const igdbRes = await fetch(`${IGDB_BASE}/${endpoint}`, {

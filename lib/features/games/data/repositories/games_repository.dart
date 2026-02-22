@@ -3,6 +3,7 @@ import 'package:game_calendar/core/result/result.dart';
 import 'package:game_calendar/features/games/data/adapters/game_hive_adapter.dart';
 import 'package:game_calendar/features/games/data/datasources/igdb_remote_datasource.dart';
 import 'package:game_calendar/features/games/data/entities/game_entity.dart';
+import 'package:game_calendar/features/games/domain/filter_models.dart';
 import 'package:game_calendar/features/games/domain/models/game.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -25,9 +26,9 @@ class GamesRepository {
 
   Future<List<Game>> getCachedGames() => _allFromHive();
 
-  Future<Result<List<Game>>> loadAndSync() async {
+  Future<Result<List<Game>>> loadAndSync(GameListType listType) async {
     final cached = await _allFromHive();
-    final result = await _remote.fetchComingSoon();
+    final result = await _remote.fetchByListType(listType);
 
     switch (result) {
       case Failure(:final message, :final stackTrace):
@@ -40,8 +41,8 @@ class GamesRepository {
     }
   }
 
-  Future<Result<List<Game>>> refresh() async {
-    final result = await _remote.fetchComingSoon();
+  Future<Result<List<Game>>> refresh(GameListType listType) async {
+    final result = await _remote.fetchByListType(listType);
     switch (result) {
       case Failure(:final message, :final stackTrace):
         return Failure<List<Game>>(message, stackTrace);
@@ -64,11 +65,13 @@ class GamesRepository {
     return _mapResult(result);
   }
 
-  Future<Result<List<Game>>> fetchFiltered({
+  Future<Result<List<Game>>> fetchFiltered(
+    GameListType listType, {
     Set<int> platformIds = const {},
     Set<int> genreIds = const {},
   }) async {
     final result = await _remote.fetchFiltered(
+      listType,
       platformIds: platformIds,
       genreIds: genreIds,
     );

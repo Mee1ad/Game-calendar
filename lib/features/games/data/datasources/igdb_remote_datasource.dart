@@ -1,21 +1,21 @@
 import 'package:game_calendar/core/result/result.dart';
 import 'package:game_calendar/features/games/data/entities/game_entity.dart';
+import 'package:game_calendar/features/games/domain/filter_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class IgdbRemoteDatasource {
-  static const _fields =
-      'name,cover.url,first_release_date,summary,screenshots.url,videos.video_id,'
-      'total_rating,platforms,genres';
-
-  Future<Result<List<GameEntity>>> fetchComingSoon({int limit = 50}) async {
-    final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-    final query = '''
-      fields $_fields;
-      where first_release_date > $now & cover != null;
-      sort first_release_date asc;
-      limit $limit;
-    ''';
-    return _fetch(query);
+  Future<Result<List<GameEntity>>> fetchByListType(
+    GameListType type, {
+    Set<int> platformIds = const {},
+    Set<int> genreIds = const {},
+    int limit = 50,
+  }) async {
+    return _fetchStructured(
+      listType: type,
+      platformIds: platformIds,
+      genreIds: genreIds,
+      limit: limit,
+    );
   }
 
   Future<Result<List<GameEntity>>> searchGames(
@@ -32,30 +32,23 @@ class IgdbRemoteDatasource {
     );
   }
 
-  Future<Result<List<GameEntity>>> fetchFiltered({
+  Future<Result<List<GameEntity>>> fetchFiltered(
+    GameListType listType, {
     Set<int> platformIds = const {},
     Set<int> genreIds = const {},
     int limit = 50,
   }) async {
-    final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-    final conditions = <String>['first_release_date > $now', 'cover != null'];
-    if (platformIds.isNotEmpty) {
-      conditions.add('platforms = (${platformIds.join(",")})');
-    }
-    if (genreIds.isNotEmpty) {
-      conditions.add('genres = (${genreIds.join(",")})');
-    }
-    final query = '''
-      fields $_fields;
-      where ${conditions.join(' & ')};
-      sort first_release_date asc;
-      limit $limit;
-    ''';
-    return _fetch(query);
+    return _fetchStructured(
+      listType: listType,
+      platformIds: platformIds,
+      genreIds: genreIds,
+      limit: limit,
+    );
   }
 
   Future<Result<List<GameEntity>>> _fetchStructured({
     String search = '',
+    GameListType? listType,
     Set<int> platformIds = const {},
     Set<int> genreIds = const {},
     int limit = 50,
@@ -64,6 +57,7 @@ class IgdbRemoteDatasource {
       final body = <String, dynamic>{
         'endpoint': 'games',
         'search': search,
+        'listType': listType?.name ?? 'popular',
         'filters': {
           if (platformIds.isNotEmpty) 'platformIds': platformIds.toList(),
           if (genreIds.isNotEmpty) 'genreIds': genreIds.toList(),
