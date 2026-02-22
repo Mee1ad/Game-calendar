@@ -117,7 +117,7 @@ class _GameListViewState extends State<GameListView> {
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.6,
+                childAspectRatio: 3 / 4,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
@@ -144,7 +144,7 @@ class _GameListViewState extends State<GameListView> {
       sliver: SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.6,
+          childAspectRatio: 3 / 4,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),

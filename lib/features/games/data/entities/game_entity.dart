@@ -48,7 +48,9 @@ class GameEntity {
       } else if (!url.startsWith('http')) {
         url = 'https://images.igdb.com/igdb/image/upload/$url';
       }
-      coverUrl = url.replaceAll('t_thumb', 't_cover_big');
+      coverUrl = url
+          .replaceAll('t_thumb', 't_720p')
+          .replaceAll('t_cover_big', 't_720p');
     }
 
     DateTime? releaseDate;
