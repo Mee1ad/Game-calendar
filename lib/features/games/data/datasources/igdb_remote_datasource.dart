@@ -3,10 +3,6 @@ import 'package:game_calendar/features/games/data/entities/game_entity.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class IgdbRemoteDatasource {
-  static const _fields =
-      'name,cover.url,first_release_date,summary,screenshots.url,videos.video_id,'
-      'total_rating,platforms,genres';
-
   Future<Result<List<GameEntity>>> fetchByListType(
     String listType, {
     Set<int> platformIds = const {},
@@ -86,7 +82,7 @@ class IgdbRemoteDatasource {
     }
 
     final data = response.data;
-    if (data is! List) return Failure('Unexpected response format');
+    if (data is! List) return const Failure('Unexpected response format');
 
     final games = data
         .whereType<Map<String, dynamic>>()

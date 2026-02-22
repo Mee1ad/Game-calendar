@@ -76,9 +76,9 @@ class _AppLoaderState extends State<AppLoader> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return MaterialApp(
-        home: const Scaffold(
-          body: const Center(child: CircularProgressIndicator()),
+      return const MaterialApp(
+        home: Scaffold(
+          body: Center(child: CircularProgressIndicator()),
         ),
       );
     }
