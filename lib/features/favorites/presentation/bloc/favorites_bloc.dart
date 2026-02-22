@@ -31,31 +31,36 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
 
   Future<void> _onLoad(
       FavoritesLoadRequested e, Emitter<FavoritesState> emit) async {
-    _sub?.cancel();
-    _sub = _favoritesRepo.watchFavoriteIds().listen((_) {
-      add(const FavoritesLoadRequested());
-    });
+    emit(const FavoritesLoading());
+    try {
+      _sub?.cancel();
+      _sub = _favoritesRepo.watchFavoriteIds().listen((_) {
+        add(const FavoritesLoadRequested());
+      });
 
-    final ids = _favoritesRepo.getFavoriteIdsOrdered();
-    final games = ids
-        .map((id) => _gamesRepo.getGame(id))
-        .whereType<Game>()
-        .toList();
+      final ids = _favoritesRepo.getFavoriteIdsOrdered();
+      final games = ids
+          .map((id) => _gamesRepo.getGame(id))
+          .whereType<Game>()
+          .toList();
 
-    final grouped = <String, List<Game>>{};
-    for (final g in games) {
-      grouped.putIfAbsent(g.releaseMonthKey, () => []).add(g);
+      final grouped = <String, List<Game>>{};
+      for (final g in games) {
+        grouped.putIfAbsent(g.releaseMonthKey, () => []).add(g);
+      }
+      for (final list in grouped.values) {
+        list.sort((a, b) => (a.releaseDate ?? DateTime(0))
+            .compareTo(b.releaseDate ?? DateTime(0)));
+      }
+
+      emit(FavoritesStateX.loaded(
+        games: games,
+        groupedByMonth: grouped,
+        favoriteIds: _favoritesRepo.getFavoriteIds(),
+      ));
+    } catch (err, st) {
+      emit(FavoritesStateX.error(err.toString()));
     }
-    for (final list in grouped.values) {
-      list.sort((a, b) => (a.releaseDate ?? DateTime(0))
-          .compareTo(b.releaseDate ?? DateTime(0)));
-    }
-
-    emit(FavoritesStateX.loaded(
-      games: games,
-      groupedByMonth: grouped,
-      favoriteIds: _favoritesRepo.getFavoriteIds(),
-    ));
   }
 
   Future<void> _onToggle(FavoritesToggled e, Emitter<FavoritesState> emit) async {

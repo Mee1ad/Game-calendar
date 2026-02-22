@@ -15,8 +15,22 @@ class FavoritesPage extends StatelessWidget {
       child: BlocBuilder<FavoritesBloc, FavoritesState>(
         builder: (context, state) {
           return switch (state) {
-            FavoritesInitial() => const Center(
+            FavoritesInitial() || FavoritesLoading() => const Center(
                 child: CircularProgressIndicator(),
+              ),
+            FavoritesError(:final message) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 48,
+                          color: Theme.of(context).colorScheme.error),
+                      const SizedBox(height: 16),
+                      Text(message, textAlign: TextAlign.center),
+                    ],
+                  ),
+                ),
               ),
             FavoritesLoaded(
               :final groupedByMonth,
@@ -93,7 +107,7 @@ class _FavoritesList extends StatelessWidget {
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.6,
+                childAspectRatio: 3 / 4,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
