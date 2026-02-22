@@ -4,31 +4,42 @@ import 'package:game_calendar/features/games/domain/models/game.dart';
 import 'package:game_calendar/features/games/presentation/widgets/game_card.dart';
 import 'package:game_calendar/features/favorites/presentation/bloc/favorites_bloc.dart';
 
-class FavoritesPage extends StatelessWidget {
+class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
 
   @override
+  State<FavoritesPage> createState() => _FavoritesPageState();
+}
+
+class _FavoritesPageState extends State<FavoritesPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<FavoritesBloc>().add(const FavoritesLoadRequested());
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => context.read<FavoritesBloc>()
-        ..add(const FavoritesLoadRequested()),
-      child: BlocBuilder<FavoritesBloc, FavoritesState>(
-        builder: (context, state) {
-          return switch (state) {
-            FavoritesInitial() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-            FavoritesLoaded(
-              :final groupedByMonth,
-              :final favoriteIds
-            ) =>
-              _FavoritesList(
-                groupedByMonth: groupedByMonth,
-                favoriteIds: favoriteIds,
-              ),
-          };
-        },
-      ),
+    return BlocBuilder<FavoritesBloc, FavoritesState>(
+      builder: (context, state) {
+        return switch (state) {
+          FavoritesInitial() => const Center(
+              child: CircularProgressIndicator(),
+            ),
+          FavoritesLoaded(
+            :final groupedByMonth,
+            :final favoriteIds
+          ) =>
+            _FavoritesList(
+              groupedByMonth: groupedByMonth,
+              favoriteIds: favoriteIds,
+            ),
+        };
+      },
     );
   }
 }
@@ -93,7 +104,7 @@ class _FavoritesList extends StatelessWidget {
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.6,
+                childAspectRatio: 3 / 4,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),

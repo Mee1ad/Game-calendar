@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:game_calendar/features/favorites/presentation/bloc/favorites_bloc.dart';
+import 'package:game_calendar/features/favorites/presentation/pages/favorites_page.dart';
 import 'package:game_calendar/features/games/domain/filter_models.dart';
 import 'package:game_calendar/features/games/presentation/bloc/game_bloc.dart';
 import 'package:game_calendar/features/games/presentation/widgets/filter_sheet.dart';
-import 'package:game_calendar/features/favorites/presentation/pages/favorites_page.dart';
 import 'package:game_calendar/features/home/presentation/widgets/error_view.dart';
 import 'package:game_calendar/features/home/presentation/widgets/game_list_view.dart';
 import 'package:game_calendar/features/home/presentation/widgets/shimmer_grid.dart';
@@ -41,7 +42,12 @@ class MainPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.favorite),
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const FavoritesPage()),
+              MaterialPageRoute(
+                builder: (_) => BlocProvider.value(
+                  value: context.read<FavoritesBloc>(),
+                  child: const FavoritesPage(),
+                ),
+              ),
             ),
           ),
         ],

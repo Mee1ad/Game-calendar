@@ -10,11 +10,10 @@ const DEFAULT_FIELDS =
 function upgradeImageUrl(url: string): string {
   if (!url || typeof url !== "string") return url;
   return url
-    .replace(/t_thumb/g, "t_cover_big_2x")
-    .replace(/t_cover_small/g, "t_cover_big_2x")
-    .replace(/t_cover_big/g, "t_cover_big_2x")
-    .replace(/t_720p/g, "t_cover_big_2x")
-    .replace(/t_screenshot_med/g, "t_cover_big_2x");
+    .replace(/t_thumb/g, "t_720p")
+    .replace(/t_cover_small/g, "t_720p")
+    .replace(/t_cover_big/g, "t_720p")
+    .replace(/t_screenshot_med/g, "t_720p");
 }
 
 function upgradeImageUrls<T>(obj: T): T {
@@ -79,11 +78,13 @@ function buildListQuery(
     conditions.push(`genres = (${filters.genreIds.join(",")})`);
   }
 
+  const year2020 = 1577836800;
   let sortClause: string;
   switch (listType) {
     case "popular":
+      conditions.push("(first_release_date >= " + year2020 + " | first_release_date > " + now + ")");
       conditions.push("total_rating_count > 0");
-      sortClause = "sort total_rating_count desc;";
+      sortClause = "sort first_release_date desc;";
       break;
     case "upcoming":
       conditions.push(`first_release_date > ${now}`);
@@ -98,7 +99,7 @@ function buildListQuery(
       sortClause = "sort first_release_date desc;";
       break;
     default:
-      sortClause = "sort popularity desc;";
+      sortClause = "sort first_release_date desc;";
   }
 
   return `fields ${DEFAULT_FIELDS};

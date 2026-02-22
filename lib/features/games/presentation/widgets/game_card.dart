@@ -15,33 +15,31 @@ class GameCard extends StatelessWidget {
     required this.game,
     required this.isFavorite,
     required this.onFavoriteTap,
-    this.showDateOnCard = true,
   });
 
   final Game game;
   final bool isFavorite;
   final VoidCallback onFavoriteTap;
-  final bool showDateOnCard;
 
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: GameCardMorph<void>(
-        closedBuilder: (ctx, open) => GestureDetector(
-          onTap: open,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              color: Colors.white.withOpacity(0.05),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [_cover(), _glassInfo(), _favButton()],
+          closedBuilder: (ctx, open) => GestureDetector(
+            onTap: open,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                color: const Color(0xFF1A1A2E),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [_cover(), _glassInfo(), _favButton()],
+                ),
               ),
             ),
           ),
-        ),
-        openBuilder: (ctx, _) =>
-            GameDetailPage(game: game, onFavoriteTap: onFavoriteTap),
+          openBuilder: (ctx, _) =>
+              GameDetailPage(game: game, onFavoriteTap: onFavoriteTap),
       ),
     );
   }
@@ -80,32 +78,16 @@ class GameCard extends StatelessWidget {
                 ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  game.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.rajdhani(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    height: 1.2,
-                  ),
-                ),
-                if (showDateOnCard && game.releaseDate != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    _formatDate(game.releaseDate!),
-                    style: GoogleFonts.rajdhani(
-                      fontSize: 13,
-                      color: Colors.white60,
-                    ),
-                  ),
-                ],
-              ],
+            child: Text(
+              game.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.rajdhani(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                height: 1.2,
+              ),
             ),
           ),
         ),
@@ -141,11 +123,7 @@ class GameCard extends StatelessWidget {
   Widget _placeholder() => Container(
         color: const Color(0xFF1A1A2E),
         child: const Center(
-          child:
-              Icon(Icons.sports_esports, size: 48, color: Colors.white24),
+          child: Icon(Icons.sports_esports, size: 48, color: Colors.white24),
         ),
       );
-
-  String _formatDate(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }

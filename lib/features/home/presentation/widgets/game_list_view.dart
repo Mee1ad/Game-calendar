@@ -185,7 +185,7 @@ class _GameListViewState extends State<GameListView> {
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.55,
+                    childAspectRatio: 3 / 4,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
@@ -211,7 +211,6 @@ class _GameListViewState extends State<GameListView> {
                             isFavorite: widget.favoriteIds.contains(game.id),
                             onFavoriteTap: () =>
                                 bloc.add(GameFavoriteToggled(game.id)),
-                            showDateOnCard: false,
                           ),
                         ),
                       ],
@@ -248,7 +247,7 @@ class _GameListViewState extends State<GameListView> {
       sliver: SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.6,
+          childAspectRatio: 3 / 4,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
@@ -258,7 +257,6 @@ class _GameListViewState extends State<GameListView> {
             isFavorite: widget.favoriteIds.contains(widget.games[index].id),
             onFavoriteTap: () =>
                 bloc.add(GameFavoriteToggled(widget.games[index].id)),
-            showDateOnCard: true,
           ),
           childCount: widget.games.length,
         ),
@@ -272,7 +270,7 @@ class _GameListViewState extends State<GameListView> {
       sliver: SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.6,
+          childAspectRatio: 3 / 4,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
