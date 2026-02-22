@@ -59,6 +59,70 @@ function buildSearchQuery(
   return parts.join("\n");
 }
 
+function buildListTypeQuery(
+  listType: "popular" | "upcoming" | "top" | "recent",
+  filters?: { platformIds?: number[]; genreIds?: number[]; limit?: number },
+): string {
+  const now = Math.floor(Date.now() / 1000);
+  const twoYearsAgo = now - 2 * 365 * 24 * 60 * 60;
+  const limit = filters?.limit || 50;
+
+  const conditions: string[] = ["cover != null"];
+  if (filters?.platformIds?.length) {
+    conditions.push(`platforms = (${filters.platformIds.join(",")})`);
+  }
+  if (filters?.genreIds?.length) {
+    conditions.push(`genres = (${filters.genreIds.join(",")})`);
+  }
+
+  switch (listType) {
+    case "popular":
+      conditions.push(`first_release_date >= ${twoYearsAgo}`);
+      conditions.push("total_rating != null");
+      return [
+        `fields ${DEFAULT_FIELDS};`,
+        `where ${conditions.join(" & ")};`,
+        "sort total_rating desc;",
+        `limit ${limit};`,
+      ].join("\n");
+    case "upcoming":
+      conditions.push(`first_release_date > ${now}`);
+      return [
+        `fields ${DEFAULT_FIELDS};`,
+        `where ${conditions.join(" & ")};`,
+        "sort first_release_date asc;",
+        `limit ${limit};`,
+      ].join("\n");
+    case "top":
+      conditions.push(`first_release_date >= ${twoYearsAgo}`);
+      conditions.push("total_rating != null");
+      return [
+        `fields ${DEFAULT_FIELDS};`,
+        `where ${conditions.join(" & ")};`,
+        "sort total_rating desc;",
+        `limit ${limit};`,
+      ].join("\n");
+    case "recent":
+      conditions.push(`first_release_date <= ${now}`);
+      conditions.push(`first_release_date >= ${twoYearsAgo}`);
+      return [
+        `fields ${DEFAULT_FIELDS};`,
+        `where ${conditions.join(" & ")};`,
+        "sort first_release_date desc;",
+        `limit ${limit};`,
+      ].join("\n");
+    default:
+      conditions.push(`first_release_date >= ${twoYearsAgo}`);
+      conditions.push("total_rating != null");
+      return [
+        `fields ${DEFAULT_FIELDS};`,
+        `where ${conditions.join(" & ")};`,
+        "sort total_rating desc;",
+        `limit ${limit};`,
+      ].join("\n");
+  }
+}
+
 async function getTwitchToken(clientId: string, clientSecret: string): Promise<string> {
   const params = new URLSearchParams({
     client_id: clientId,
@@ -103,11 +167,12 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    const { endpoint, query, search, filters } = body as {
+    const { endpoint, query, search, filters, listType } = body as {
       endpoint: string;
       query?: string;
       search?: string;
       filters?: { platformIds?: number[]; genreIds?: number[]; limit?: number };
+      listType?: "popular" | "upcoming" | "top" | "recent";
     };
 
     if (!endpoint) {
@@ -117,7 +182,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const igdbQuery = query ?? buildSearchQuery(search ?? "", filters);
+    const igdbQuery =
+      query ??
+      (listType
+        ? buildListTypeQuery(listType, filters)
+        : buildSearchQuery(search ?? "", filters));
 
     const token = await getTwitchToken(clientId, clientSecret);
     const igdbRes = await fetch(`${IGDB_BASE}/${endpoint}`, {

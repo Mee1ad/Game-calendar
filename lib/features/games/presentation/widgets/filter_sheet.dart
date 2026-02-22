@@ -37,6 +37,28 @@ class FilterSheet extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
+                'List',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: GameListType.values.map((t) {
+                  final selected = filters.listType == t;
+                  return FilterChip(
+                    label: Text(_listTypeLabel(t)),
+                    selected: selected,
+                    onSelected: (_) {
+                      onFiltersChanged(filters.copyWith(listType: t));
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+              Text(
                 'Platforms',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
@@ -91,28 +113,6 @@ class FilterSheet extends StatelessWidget {
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Release Status',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: ReleaseStatus.values.map((s) {
-                  final selected = filters.releaseStatus == s;
-                  return FilterChip(
-                    label: Text(_statusLabel(s)),
-                    selected: selected,
-                    onSelected: (_) {
-                      onFiltersChanged(filters.copyWith(releaseStatus: s));
-                    },
-                  );
-                }).toList(),
-              ),
             ],
           ),
         );
@@ -120,11 +120,12 @@ class FilterSheet extends StatelessWidget {
     );
   }
 
-  String _statusLabel(ReleaseStatus s) {
-    return switch (s) {
-      ReleaseStatus.all => 'All',
-      ReleaseStatus.released => 'Released',
-      ReleaseStatus.upcoming => 'Upcoming',
+  String _listTypeLabel(GameListType t) {
+    return switch (t) {
+      GameListType.popular => 'Popular',
+      GameListType.upcoming => 'Upcoming',
+      GameListType.top => 'Top',
+      GameListType.recent => 'Recent',
     };
   }
 }

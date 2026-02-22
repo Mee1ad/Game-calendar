@@ -3,25 +3,31 @@ class GameFilters {
     this.platformIds = const {},
     this.genreIds = const {},
     this.releaseStatus = ReleaseStatus.all,
+    this.listType = GameListType.popular,
   });
 
   final Set<int> platformIds;
   final Set<int> genreIds;
   final ReleaseStatus releaseStatus;
+  final GameListType listType;
 
   GameFilters copyWith({
     Set<int>? platformIds,
     Set<int>? genreIds,
     ReleaseStatus? releaseStatus,
+    GameListType? listType,
   }) =>
       GameFilters(
         platformIds: platformIds ?? this.platformIds,
         genreIds: genreIds ?? this.genreIds,
         releaseStatus: releaseStatus ?? this.releaseStatus,
+        listType: listType ?? this.listType,
       );
 }
 
 enum ReleaseStatus { all, released, upcoming }
+
+enum GameListType { popular, upcoming, top, recent }
 
 const platformIds = {
   6: 'PC',
