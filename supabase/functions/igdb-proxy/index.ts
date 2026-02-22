@@ -10,9 +10,10 @@ const DEFAULT_FIELDS =
 function upgradeImageUrl(url: string): string {
   if (!url || typeof url !== "string") return url;
   return url
-    .replace(/t_thumb/g, "t_cover_big")
-    .replace(/t_cover_small/g, "t_cover_big")
-    .replace(/t_screenshot_med/g, "t_cover_big");
+    .replace(/t_thumb/g, "t_720p")
+    .replace(/t_cover_small/g, "t_720p")
+    .replace(/t_cover_big/g, "t_720p")
+    .replace(/t_screenshot_med/g, "t_720p");
 }
 
 function upgradeImageUrls<T>(obj: T): T {
@@ -43,6 +44,8 @@ function buildSearchQuery(
   parts.push(`fields ${DEFAULT_FIELDS};`);
 
   const conditions: string[] = ["cover != null"];
+  const jan2020 = 1577836800;
+  conditions.push(`first_release_date >= ${jan2020}`);
   if (filters?.platformIds?.length) {
     conditions.push(`platforms = (${filters.platformIds.join(",")})`);
   }
@@ -50,10 +53,7 @@ function buildSearchQuery(
     conditions.push(`genres = (${filters.genreIds.join(",")})`);
   }
   parts.push(`where ${conditions.join(" & ")};`);
-
-  if (!search) {
-    parts.push("sort first_release_date asc;");
-  }
+  parts.push("sort first_release_date desc;");
 
   parts.push(`limit ${filters?.limit || 50};`);
   return parts.join("\n");
