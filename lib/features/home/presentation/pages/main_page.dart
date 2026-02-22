@@ -53,6 +53,8 @@ class MainPage extends StatelessWidget {
 }
 
 class _GamesTab extends StatelessWidget {
+  const _GamesTab();
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<GameBloc, GameState>(
