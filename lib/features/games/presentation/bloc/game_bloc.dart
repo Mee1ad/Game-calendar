@@ -78,7 +78,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     return switch (t) {
       GameListType.popular => 'popular',
       GameListType.upcoming => 'upcoming',
-      GameListType.top => 'top',
       GameListType.recent => 'recent',
     };
   }

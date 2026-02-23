@@ -26,7 +26,7 @@ class GameCardMorph<T> extends StatelessWidget {
         closedColor: Colors.transparent,
         openColor: Theme.of(context).colorScheme.surface,
         closedShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
     );

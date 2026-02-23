@@ -31,18 +31,18 @@ class ShimmerGameCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ShimmerLoading(
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           color: Colors.white.withOpacity(0.05),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                flex: 7,
+                flex: 8,
                 child: Container(color: Colors.white24),
               ),
               Expanded(
-                flex: 3,
+                flex: 2,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(

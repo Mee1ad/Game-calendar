@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:game_calendar/features/games/domain/models/game.dart';
@@ -20,16 +21,10 @@ class GameDetailPage extends StatelessWidget {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 280,
+            expandedHeight: 360,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              background: game.coverUrl != null
-                  ? Image.network(
-                      game.coverUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _placeholder(theme),
-                    )
-                  : _placeholder(theme),
+              background: _headerImage(theme),
             ),
             actions: [
               BlocBuilder<GameBloc, GameState>(
@@ -103,19 +98,20 @@ class GameDetailPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     SizedBox(
-                      height: 120,
+                      height: 180,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: game.screenshots.length,
                         separatorBuilder: (_, __) => const SizedBox(width: 8),
                         itemBuilder: (_, i) => ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            game.screenshots[i],
-                            width: 200,
+                          borderRadius: BorderRadius.circular(12),
+                          child: CachedNetworkImage(
+                            imageUrl: game.screenshots[i],
+                            cacheKey: 'game_ss_${game.id}_$i',
+                            width: 300,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const SizedBox(
-                              width: 200,
+                            errorWidget: (_, __, ___) => const SizedBox(
+                              width: 300,
                               child: Icon(Icons.broken_image),
                             ),
                           ),
@@ -129,6 +125,40 @@ class GameDetailPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _headerImage(ThemeData theme) {
+    final headerUrl = game.screenshots.isNotEmpty
+        ? game.screenshots.first
+        : game.coverUrl;
+
+    if (headerUrl == null) return _placeholder(theme);
+
+    final cacheKey = game.screenshots.isNotEmpty
+        ? 'game_header_ss_${game.id}'
+        : 'game_cover_${game.id}';
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        CachedNetworkImage(
+          imageUrl: headerUrl,
+          cacheKey: cacheKey,
+          fit: BoxFit.cover,
+          errorWidget: (_, __, ___) => _placeholder(theme),
+        ),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Colors.black54],
+              stops: [0.5, 1.0],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

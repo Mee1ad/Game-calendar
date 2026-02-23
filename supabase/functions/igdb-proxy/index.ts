@@ -5,7 +5,7 @@ const TWITCH_TOKEN_URL = "https://id.twitch.tv/oauth2/token";
 
 const DEFAULT_FIELDS =
   "name,cover.url,first_release_date,summary,screenshots.url,videos.video_id," +
-  "total_rating,platforms,genres";
+  "total_rating,platforms,genres,hypes,follows";
 
 function upgradeImageUrl(url: string): string {
   if (!url || typeof url !== "string") return url;
@@ -44,8 +44,10 @@ function buildSearchQuery(
   parts.push(`fields ${DEFAULT_FIELDS};`);
 
   const conditions: string[] = ["cover != null"];
-  const jan2020 = 1577836800;
-  conditions.push(`first_release_date >= ${jan2020}`);
+  if (!search) {
+    const jan2020 = 1577836800;
+    conditions.push(`first_release_date >= ${jan2020}`);
+  }
   if (filters?.platformIds?.length) {
     conditions.push(`platforms = (${filters.platformIds.join(",")})`);
   }
@@ -53,14 +55,17 @@ function buildSearchQuery(
     conditions.push(`genres = (${filters.genreIds.join(",")})`);
   }
   parts.push(`where ${conditions.join(" & ")};`);
-  parts.push("sort first_release_date desc;");
+
+  if (!search) {
+    parts.push("sort first_release_date desc;");
+  }
 
   parts.push(`limit ${filters?.limit || 50};`);
   return parts.join("\n");
 }
 
 function buildListTypeQuery(
-  listType: "popular" | "upcoming" | "top" | "recent",
+  listType: "popular" | "upcoming" | "recent",
   filters?: { platformIds?: number[]; genreIds?: number[]; limit?: number },
 ): string {
   const now = Math.floor(Date.now() / 1000);
@@ -90,16 +95,7 @@ function buildListTypeQuery(
       return [
         `fields ${DEFAULT_FIELDS};`,
         `where ${conditions.join(" & ")};`,
-        "sort first_release_date asc;",
-        `limit ${limit};`,
-      ].join("\n");
-    case "top":
-      conditions.push(`first_release_date >= ${twoYearsAgo}`);
-      conditions.push("total_rating != null");
-      return [
-        `fields ${DEFAULT_FIELDS};`,
-        `where ${conditions.join(" & ")};`,
-        "sort total_rating desc;",
+        "sort hypes desc;",
         `limit ${limit};`,
       ].join("\n");
     case "recent":
@@ -172,7 +168,7 @@ Deno.serve(async (req: Request) => {
       query?: string;
       search?: string;
       filters?: { platformIds?: number[]; genreIds?: number[]; limit?: number };
-      listType?: "popular" | "upcoming" | "top" | "recent";
+      listType?: "popular" | "upcoming" | "recent";
     };
 
     if (!endpoint) {

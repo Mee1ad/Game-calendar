@@ -27,7 +27,7 @@ class GameFilters {
 
 enum ReleaseStatus { all, released, upcoming }
 
-enum GameListType { popular, upcoming, top, recent }
+enum GameListType { popular, upcoming, recent }
 
 const platformIds = {
   6: 'PC',

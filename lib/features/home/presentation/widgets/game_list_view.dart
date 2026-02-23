@@ -142,7 +142,7 @@ class _GameListViewState extends State<GameListView> {
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 3 / 4,
+                childAspectRatio: 3 / 5,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
@@ -167,7 +167,6 @@ class _GameListViewState extends State<GameListView> {
     return switch (t) {
       GameListType.popular => 'Popular',
       GameListType.upcoming => 'Upcoming',
-      GameListType.top => 'Top',
       GameListType.recent => 'Recent',
     };
   }
@@ -178,7 +177,7 @@ class _GameListViewState extends State<GameListView> {
       sliver: SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 3 / 4,
+          childAspectRatio: 3 / 5,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),

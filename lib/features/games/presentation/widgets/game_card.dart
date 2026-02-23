@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -27,17 +26,19 @@ class GameCard extends StatelessWidget {
       child: GameCardMorph<void>(
         closedBuilder: (ctx, open) => GestureDetector(
           onTap: open,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: AspectRatio(
-              aspectRatio: 3 / 4,
-              child: Container(
-                color: const Color(0xFF1A1A2E),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [_cover(), _glassInfo(), _favButton()],
+          child: Container(
+            color: const Color(0xFF1A1A2E),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [_cover(), _favButton()],
+                  ),
                 ),
-              ),
+                _infoSection(),
+              ],
             ),
           ),
         ),
@@ -51,6 +52,7 @@ class GameCard extends StatelessWidget {
     if (game.coverUrl == null) return _placeholder();
     return CachedNetworkImage(
       imageUrl: game.coverUrl!,
+      cacheKey: 'game_cover_${game.id}',
       fit: BoxFit.cover,
       placeholder: (_, __) => Shimmer.fromColors(
         baseColor: Colors.grey.shade900,
@@ -61,38 +63,18 @@ class GameCard extends StatelessWidget {
     );
   }
 
-  Widget _glassInfo() {
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.15),
-                  Colors.black.withOpacity(0.75),
-                ],
-              ),
-            ),
-            child: Text(
-              game.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.rajdhani(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                height: 1.2,
-              ),
-            ),
-          ),
+  Widget _infoSection() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+      child: Text(
+        game.name,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.rajdhani(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          height: 1.2,
         ),
       ),
     );

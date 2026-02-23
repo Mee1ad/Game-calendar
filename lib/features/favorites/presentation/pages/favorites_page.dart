@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:game_calendar/features/games/domain/models/game.dart';
 import 'package:game_calendar/features/games/presentation/widgets/game_card.dart';
 import 'package:game_calendar/features/favorites/presentation/bloc/favorites_bloc.dart';
 
-class FavoritesPage extends StatelessWidget {
+class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
+
+  @override
+  State<FavoritesPage> createState() => _FavoritesPageState();
+}
+
+class _FavoritesPageState extends State<FavoritesPage> {
+  @override
+  void initState() {
+    super.initState();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<FavoritesBloc>().add(const FavoritesLoadRequested());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,63 +31,67 @@ class FavoritesPage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: BlocProvider(
-        create: (context) => context.read<FavoritesBloc>()
-          ..add(const FavoritesLoadRequested()),
-        child: BlocBuilder<FavoritesBloc, FavoritesState>(
-          builder: (context, state) {
-            try {
-              return switch (state) {
-                FavoritesInitial() || FavoritesLoading() => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                FavoritesError(:final message) => Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.error_outline, size: 48,
-                                color: Theme.of(context).colorScheme.error),
-                            const SizedBox(height: 16),
-                            Text(message, textAlign: TextAlign.center),
-                          ],
-                        ),
+      body: BlocBuilder<FavoritesBloc, FavoritesState>(
+        builder: (context, state) {
+          try {
+            return switch (state) {
+              FavoritesInitial() || FavoritesLoading() => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              FavoritesError(:final message) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline,
+                              size: 48,
+                              color: Theme.of(context).colorScheme.error),
+                          const SizedBox(height: 16),
+                          Text(message, textAlign: TextAlign.center),
+                          const SizedBox(height: 24),
+                          FilledButton.icon(
+                            onPressed: () => context
+                                .read<FavoritesBloc>()
+                                .add(const FavoritesLoadRequested()),
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                FavoritesLoaded(
-                  :final groupedByMonth,
-                  :final favoriteIds
-                ) =>
-                  _FavoritesList(
-                    groupedByMonth: groupedByMonth,
-                    favoriteIds: favoriteIds,
-                  ),
-              };
-            } catch (e, st) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.error_outline, size: 48,
-                            color: Theme.of(context).colorScheme.error),
-                        const SizedBox(height: 16),
-                        Text('Error: $e', textAlign: TextAlign.center),
-                        const SizedBox(height: 16),
-                        Text('$st', style: Theme.of(context).textTheme.bodySmall),
-                      ],
-                    ),
+                ),
+              FavoritesLoaded(:final groupedByMonth, :final favoriteIds) =>
+                _FavoritesList(
+                  groupedByMonth: groupedByMonth,
+                  favoriteIds: favoriteIds,
+                ),
+            };
+          } catch (e, st) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.error),
+                      const SizedBox(height: 16),
+                      Text('Error: $e', textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      Text('$st',
+                          style: Theme.of(context).textTheme.bodySmall),
+                    ],
                   ),
                 ),
-              );
-            }
-          },
-        ),
+              ),
+            );
+          }
+        },
       ),
     );
   }
@@ -137,7 +157,7 @@ class _FavoritesList extends StatelessWidget {
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 3 / 4,
+                childAspectRatio: 3 / 5,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),

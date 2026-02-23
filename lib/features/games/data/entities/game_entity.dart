@@ -50,7 +50,8 @@ class GameEntity {
       }
       coverUrl = url
           .replaceAll('t_thumb', 't_720p')
-          .replaceAll('t_cover_big', 't_720p');
+          .replaceAll('t_cover_big', 't_720p')
+          .replaceAll('t_cover_small', 't_720p');
     }
 
     DateTime? releaseDate;
