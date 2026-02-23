@@ -124,7 +124,6 @@ class FilterSheet extends StatelessWidget {
     return switch (t) {
       GameListType.popular => 'Popular',
       GameListType.upcoming => 'Upcoming',
-      GameListType.top => 'Top',
       GameListType.recent => 'Recent',
     };
   }
